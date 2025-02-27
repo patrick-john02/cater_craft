@@ -1,9 +1,14 @@
 <?php
-require_once '../config/config.php'; 
+require_once __DIR__ . '/../controllers/MenuCategoryController.php';
+require_once __DIR__ . '/../controllers/UserController.php';
 
-// Fetching verified caterers on the database
-$stmt = $pdo->query("SELECT id, business_name, location FROM caterers WHERE verification_status = 'verified' ORDER BY business_name ASC");
-$caterers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// fetch all the categories
+$categoryController = new MenuCategoryController($pdo);
+$categories = $categoryController->index();
+
+//fetch the admin phone number
+$usercontroller = new UserController($pdo);
+$adminphonenumber = $usercontroller->getPhoneNumber();
 ?>
 <!DOCTYPE html>
 <html lang="zxx">
@@ -37,19 +42,19 @@ $caterers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="hero__categories">
             <div class="hero__categories__all">
         <i class="fa fa-bars"></i>
-        <span>List of  Caterers</span>
+        <span>Categories</span>
     </div>
-    <ul>
-        <?php foreach ($caterers as $caterer): ?>
-            <li>
-                <a href="caterer_profile.php?id=<?= htmlspecialchars($caterer['id']) ?>">
-                    <?= htmlspecialchars($caterer['business_name']) ?>
+        <ul>
+            <?php foreach ($categories as $category): ?>
+                <li>
+                <a href="categories.php?category_id=<?= $category['id'] ?>">
+                <?= htmlspecialchars($category['category']) ?>
                 </a>
-            </li>
+                </li>
             <?php endforeach; ?>
-    </ul>
+        </ul>
+    </div>
 </div>
-            </div>
             <div class="col-lg-9">
                 <div class="hero__search">
                     <div class="hero__search__form">
@@ -64,7 +69,7 @@ $caterers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <i class="fa fa-phone"></i>
                         </div>
                         <div class="hero__search__phone__text">
-                            <h5>+63 912-3456-789</h5>
+                            <h5><?= htmlspecialchars($adminphonenumber)?></h5>
                             <span>support 24/7 time</span>
                         </div>
                     </div>
@@ -74,7 +79,7 @@ $caterers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <span>PREMIUM CATERING</span>
                         <h2>Delicious <br>Menus for Every Occasion</h2>
                         <p>Quality Catering Service for Any Event</p>
-                        <a href="#" class="primary-btn">EXPLORE MENUS</a>
+                        <a href="#" class="primary-btn">EXPLORE PACKAGES</a>
                     </div>
                 </div>
             </div>
