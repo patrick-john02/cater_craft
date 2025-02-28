@@ -22,6 +22,7 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
     <title>Cater | Craft</title>
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 
     <!-- Css Styles -->
     <link rel="stylesheet" href="../assets/organi/css/bootstrap.min.css" type="text/css">
@@ -54,8 +55,14 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
         </li>
     <?php endforeach; ?>
 </ul>
+
     </div>
+    <br>
+    <button class="site-btn" data-toggle="modal" data-target="#dateAvailabilityModal">
+                            CHECK DATE AVAILABILITY
+                        </button>
 </div>
+
             <div class="col-lg-9">
                 <div class="hero__search">
                     <div class="hero__search__form">
@@ -232,6 +239,28 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
         </div>
     </section>-->
     <!-- Featured Section End -->
+
+     <!-- MODAL FOR CHECKING DATE AVAILABILITY -->
+<div class="modal fade" id="dateAvailabilityModal" tabindex="-1" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Check Date Availability</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- <p>Select a date from the calendar:</p> -->
+                <div id="calendar"></div> 
+                <br>
+                <!-- <button class="btn btn-success" onclick="checkAvailability()">Check Availability</button> -->
+                <p id="availability-message" class="mt-3"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php include('includes/footer.php');?>
    
     <!-- Js Plugins -->
@@ -243,5 +272,50 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
     <script src="../assets/organi/js/mixitup.min.js"></script>
     <script src="../assets/organi/js/owl.carousel.min.js"></script>
     <script src="../assets/organi/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    let calendarEl = document.getElementById('calendar');
+
+    let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        selectable: true,
+        dateClick: function(info) {
+            let selectedDate = info.dateStr;
+            checkAvailability(selectedDate);
+        }
+    });
+
+    $('#dateAvailabilityModal').on('shown.bs.modal', function () {
+        calendar.render();
+    });
+});
+
+function checkAvailability(selectedDate) {
+    if (!selectedDate) {
+        document.getElementById("availability-message").innerHTML = "<span style='color: red;'>Please select a date!</span>";
+        return;
+    }
+
+    $.ajax({
+        url: "/cater-craft/routes.php?route=check_date",
+        type: "POST",
+        data: { date: selectedDate },
+        dataType: "json",
+        success: function(response) {
+            if (response.available) {
+                $("#availability-message").html("<span style='color: green;'>Date is available!</span>");
+            } else {
+                $("#availability-message").html("<span style='color: red;'>Date is fully booked!</span>");
+            }
+        },
+        error: function() {
+            $("#availability-message").html("<span style='color: red;'>Error checking availability.</span>");
+        }
+    });
+}
+</script>
 </body>
 </html>

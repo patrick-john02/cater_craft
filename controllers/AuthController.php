@@ -31,12 +31,17 @@ class AuthController {
                 ];
                 error_log("User logged in successfully");
 
-                header("Location: public/landing_page.php");
+                // Redirect based on user type
+                if ($user['user_type_id'] == 2) {
+                    header("Location: ../cater-craft/views/admin/admin_dashboard.php"); // Redirect admins
+                } else {
+                    header("Location: ./public/landing_page.php"); // Redirect customers
+                }
                 exit();
             } else {
                 error_log("Login failed for email: " . $email);
                 $_SESSION['error'] = "Invalid email or password!";
-                header("Location: ./public/login.php");
+                header("Location: ../public/login.php");
                 exit();
             }
         }
