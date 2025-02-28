@@ -31,5 +31,16 @@ class MenuItem {
         $stmt->execute([$category_id]);
         return $stmt->fetchColumn(); 
     }
+    public function getMenuItemById($id) {
+        $stmt = $this->pdo->prepare("
+            SELECT mi.*, mc.category 
+            FROM menu_items mi
+            JOIN menu_categories mc ON mi.category_id = mc.id
+            WHERE mi.id = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+    
 }
 ?>

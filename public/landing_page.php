@@ -1,12 +1,13 @@
 <?php
+require_once __DIR__ . '/../config/database.php'; // Include database connection
 require_once __DIR__ . '/../controllers/MenuCategoryController.php';
 require_once __DIR__ . '/../controllers/UserController.php';
 
-// fetch all the categories
+$pdo = Database::getConnection();
+
 $categoryController = new MenuCategoryController($pdo);
 $categories = $categoryController->index();
 
-//fetch the admin phone number
 $usercontroller = new UserController($pdo);
 $adminphonenumber = $usercontroller->getPhoneNumber();
 ?>
@@ -44,15 +45,15 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
         <i class="fa fa-bars"></i>
         <span>Categories</span>
     </div>
-        <ul>
-            <?php foreach ($categories as $category): ?>
-                <li>
-                <a href="categories.php?category_id=<?= $category['id'] ?>">
+    <ul>
+    <?php foreach ($categories as $category): ?>
+        <li>
+            <a href="categories.php?category_id=<?= $category['id'] ?>">
                 <?= htmlspecialchars($category['category']) ?>
-                </a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+            </a>
+        </li>
+    <?php endforeach; ?>
+</ul>
     </div>
 </div>
             <div class="col-lg-9">
@@ -87,8 +88,6 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
     </div>
 </section>
 
-
-  
    <!-- Featured Section Begin 
    <section class="featured spad">
         <div class="container">

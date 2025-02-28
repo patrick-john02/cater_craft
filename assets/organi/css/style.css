@@ -1611,7 +1611,11 @@ ol {
 }
 
 .product__item__text h6 a {
+	text-decoration: none;
 	color: #252525;
+	color: #333;  
+    font-weight: bold; 
+    transition: color 0.3s ease, text-decoration 0.3s ease;
 }
 
 .product__item__text h5 {

@@ -8,7 +8,7 @@ class MenuItemController {
         $this->model = new MenuItem($pdo);
     }
 
-    // Keep only ONE version of the method
+
     public function showByCategory($category_id) {
         $categories = $this->model->getCategories();
         $menu_items = $this->model->getByCategory($category_id);
@@ -20,5 +20,13 @@ class MenuItemController {
             'category_name' => $category_name
         ];
     }
+    public function showItemDetails($id) {
+        $item = $this->model->getMenuItemById($id);
+        if (!$item) {
+            die("Item not found");
+        }
+        return $item;
+    }
+    
 }
 ?>
