@@ -6,6 +6,8 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../controllers/CartController.php';
 
+$isAuthenticated = isset($_SESSION['user']);
+
 $cartController = new CartController();
 
 if (!isset($_SESSION['booking_id'])) {
@@ -50,7 +52,7 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
                     <div class="breadcrumb__text">
                         <h2>Cater Cart</h2>
                         <div class="breadcrumb__option">
-                            <a href="./index.html">Home</a>
+                            <a href="landing_page.php">Home</a>
                             <span>Cater Cart</span>
                         </div>
                     </div>
@@ -105,7 +107,8 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
         <li>Subtotal <span>₱<?= number_format($totalAmount, 2) ?></span></li>
         <li>Total <span>₱<?= number_format($totalAmount, 2) ?></span></li>
     </ul>
-    <a href="checkout.php" class="primary-btn">PROCEED TO CHECKOUT</a>
+    <a href="checkout.php" class="primary-btn" <?= empty($cartItems) ? 'style="pointer-events: none; opacity: 0.5;"' : '' ?>>PROCEED TO CHECKOUT</a>
+
 </div>
     </div>
 </section>

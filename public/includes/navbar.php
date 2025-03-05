@@ -10,13 +10,18 @@ require_once __DIR__ . '/../../controllers/CartController.php';
 $isAuthenticated = isset($_SESSION['user']);
 $userName = $isAuthenticated ? $_SESSION['user']['name'] : null;
 
-//connection to db
+// Database connection
 $pdo = Database::getConnection();
 
 $userController = new UserController($pdo);
 $adminEmail = $userController->getAdminEmail();
+
 $cartController = new CartController();
-$cartCount = isset($_SESSION['booking_id']) ? $cartController->getCartCount($_SESSION['booking_id']) : 0;
+$booking_id = $_SESSION['booking_id'] ?? 1;
+
+// Fetch cart count and total amount
+$cartCount = $cartController->getCartCount($booking_id);
+$totalAmount = $cartController->fetchCartTotal($booking_id); // Get total price of cart items
 ?>
 
 <head>
@@ -166,7 +171,7 @@ $cartCount = isset($_SESSION['booking_id']) ? $cartController->getCartCount($_SE
                             <li><a href="add_to_cart.php"><i class="fa fa-shopping-bag"></i> <span id="cart-count"><?= $cartCount ?></span></a></li>
                         </ul>
 
-                    <div class="header__cart__price">Total: <span>₱4500.00</span></div>
+                        <div class="header__cart__price">Total: <span id="cart-total">₱<?= number_format($totalAmount, 2) ?></span></div>
                 </div>
             </div>
         </div>
@@ -240,4 +245,31 @@ $(document).on("click", ".add-to-cart", function (event) {
         }
     });
 });
+</script>
+<script>
+function updateCartDetails() {
+    $.ajax({
+        url: "/cater-craft/routes.php?route=cart_summary",
+        type: "GET",
+        dataType: "json",
+        success: function (response) {
+            if (response.cartCount !== undefined) {
+                $("#cart-count").text(response.cartCount);
+            }
+            if (response.cartTotal !== undefined) {
+                $("#cart-total").text("₱" + parseFloat(response.cartTotal).toFixed(2));
+            }
+        },
+        error: function () {
+            console.error("Failed to fetch cart details.");
+        }
+    });
+}
+
+// Update cart details every 5 seconds
+setInterval(updateCartDetails, 5000);
+
+// Ensure update happens immediately on page load
+$(document).ready(updateCartDetails);
+
 </script>
