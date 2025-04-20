@@ -4,6 +4,7 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/controllers/CartController.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 
+
 $pdo = Database::getConnection();
 $cartController = new CartController($pdo);
 $authController = new AuthController();
@@ -60,4 +61,14 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['route']) && $_GET['rout
     echo json_encode(['cartCount' => $cartCount]);
     exit();
 }
-?>
+
+if ($_GET['route'] === 'cart_summary') {
+    require_once 'controllers/CartController.php';
+    $cartController = new CartController();
+    $booking_id = $_SESSION['booking_id'] ?? 1;
+    
+    echo json_encode([
+        'cartTotal' => $cartController->getCartTotal($booking_id)
+    ]);
+    exit;
+}

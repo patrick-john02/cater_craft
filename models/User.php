@@ -7,7 +7,11 @@ class User {
     public function __construct() {
         $this->pdo = Database::getConnection();
     }
-       
+    public function getUserById($id) {
+        $stmt = $this->pdo->prepare("SELECT name FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }  
 
     public function fetchAdminEmail() {
         $stmt = $this->pdo->prepare("

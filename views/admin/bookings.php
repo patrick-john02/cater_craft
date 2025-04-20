@@ -1,3 +1,18 @@
+<?php
+// Include necessary files
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../models/AdminManageBooking.php';
+
+// Fetch all bookings
+$bookingModel = new ManageBooking();
+$bookings = $bookingModel->getAllBookings();
+
+// Ensure $bookings is always an array
+if (!is_array($bookings)) {
+    $bookings = [];
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,10 +73,10 @@
                   </div>
                   <div class="card-body">
                     <div class="table-responsive">
-                    <table class="table table-striped" id="table-1">
-                        <thead>                                 
+                    <table class="table table-striped">
+                        <thead>
                           <tr>
-                            <th class="text-center">#</th>
+                            <th>#</th>
                             <th>Customer Name</th>
                             <th>Booking Date</th>
                             <th>Event Type</th>
@@ -70,43 +85,19 @@
                             <th>Action</th>
                           </tr>
                         </thead>
-                        <tbody>                                 
-                          <tr>
-                            <td>1</td>
-                            <td>John Doe</td>
-                            <td>2025-03-10</td>
-                            <td>Wedding</td>
-                            <td>150</td>
-                            <td><div class="badge badge-success">Confirmed</div></td>
-                            <td><a href="#" class="btn btn-secondary">View</a></td>
-                          </tr>
-                          <tr>
-                            <td>2</td>
-                            <td>Jane Smith</td>
-                            <td>2025-03-15</td>
-                            <td>Birthday Party</td>
-                            <td>50</td>
-                            <td><div class="badge badge-warning">Pending</div></td>
-                            <td><a href="#" class="btn btn-secondary">View</a></td>
-                          </tr>
-                          <tr>
-                            <td>3</td>
-                            <td>Michael Johnson</td>
-                            <td>2025-04-05</td>
-                            <td>Corporate Event</td>
-                            <td>200</td>
-                            <td><div class="badge badge-info">Ongoing</div></td>
-                            <td><a href="#" class="btn btn-secondary">View</a></td>
-                          </tr>
-                          <tr>
-                            <td>4</td>
-                            <td>Emily Brown</td>
-                            <td>2025-04-20</td>
-                            <td>Anniversary</td>
-                            <td>80</td>
-                            <td><div class="badge badge-danger">Cancelled</div></td>
-                            <td><a href="#" class="btn btn-secondary">View</a></td>
-                          </tr>
+                        <tbody>
+                          <?php foreach ($bookings as $index => $booking): ?>
+                            <tr>
+                              <td><?= $index + 1; ?></td>
+                              <td><?= htmlspecialchars($booking['customer_name']); ?></td>
+                              <td><?= htmlspecialchars($booking['event_date']); ?></td>
+                              <td><?= htmlspecialchars($booking['event_type']); ?></td>
+                              <td><?= htmlspecialchars($booking['guests']); ?></td>
+                              <td><div class="badge badge-success"><?= htmlspecialchars($booking['status']); ?></div></td>
+                              <td><a href="payments.php?booking_id=<?= $booking['id']; ?>" class="btn btn-primary">View Payment</a></td>
+
+                            </tr>
+                          <?php endforeach; ?>
                         </tbody>
                       </table>
                     </div>

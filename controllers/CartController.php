@@ -43,5 +43,6 @@ class CartController {
     public function getCartCount($booking_id) {
         return count($this->cartModel->getItems($booking_id));
     }
+    
 }
 ?>

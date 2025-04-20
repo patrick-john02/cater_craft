@@ -28,7 +28,7 @@ class AuthController {
                     'email' => $user['email'],
                     'user_type_id' => $user['user_type_id'],
                     'user_role' => $user['user_role']
-                ];
+                ];                
                 error_log("User logged in successfully");
 
                 // Redirect based on user type
@@ -41,7 +41,7 @@ class AuthController {
             } else {
                 error_log("Login failed for email: " . $email);
                 $_SESSION['error'] = "Invalid email or password!";
-                header("Location: ../public/login.php");
+                header("Location: ./public/login.php");
                 exit();
             }
         }

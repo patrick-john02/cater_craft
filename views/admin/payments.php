@@ -1,3 +1,52 @@
+<?php
+require_once __DIR__ . '/../../config/database.php';
+
+try {
+    $pdo = Database::getConnection();
+
+    // Validate booking_id
+    $booking_id = isset($_GET['booking_id']) ? intval($_GET['booking_id']) : 0;
+    if ($booking_id <= 0) {
+        throw new Exception("Invalid booking ID.");
+    }
+
+    // Fetch payment details
+    $sql = "SELECT 
+    p.id AS payment_id, b.id AS booking_id, u.name AS customer_name, 
+    u.address, u.email, b.event_date, b.event_time, b.guests, 
+    b.venue, b.special_requests, p.amount, p.created_at AS payment_date, 
+    pm.method AS payment_method, p.gcash_receipt, b.total_amount
+FROM payments p
+JOIN bookings b ON p.booking_id = b.id
+JOIN users u ON b.customer_id = u.id
+LEFT JOIN payment_methods pm ON p.payment_method_id = pm.id
+WHERE p.booking_id = :booking_id";
+
+
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['booking_id' => $booking_id]);
+    $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$payment) {
+        throw new Exception("No payment found for this booking.");
+    }
+
+    // Fetch booking items
+    $items_sql = "SELECT mi.name AS item_name, bi.quantity, mi.price, (bi.quantity * mi.price) AS subtotal
+                  FROM booking_items bi
+                  JOIN menu_items mi ON bi.menu_item_id = mi.id
+                  WHERE bi.booking_id = :booking_id";
+
+    $items_stmt = $pdo->prepare($items_sql);
+    $items_stmt->execute(['booking_id' => $booking_id]);
+    $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (Exception $e) {
+    die("<p style='color: red;'>Error: " . htmlspecialchars($e->getMessage()) . "</p>");
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,153 +75,172 @@
 <!-- /END GA --></head>
 
 <body>
-  <div id="app">
-    <div class="main-wrapper main-wrapper-1">
-    <?php include 'includes/navbar.php'?>
-    <?php include 'includes/sidebar.php'?>
-      
-      <!-- Main Content -->
-      <div class="main-content">
-        <section class="section">
-          <div class="section-header">
-            <h1>Invoice</h1>
-            <div class="section-header-breadcrumb">
-              <div class="breadcrumb-item active"><a href="#">Dashboard</a></div>
-              <div class="breadcrumb-item">Payments</div>
-            </div>
-          </div>
+    <div id="app">
+        <div class="main-wrapper main-wrapper-1">
+            <?php include 'includes/navbar.php'; ?>
+            <?php include 'includes/sidebar.php'; ?>
 
-          <div class="section-body">
-  <div class="invoice">
-    <div class="invoice-print">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="invoice-title">
-            <h2>Invoice</h2>
-            <div class="invoice-number">Order #98765</div>
-          </div>
-          <hr>
-          <div class="row">
-            <div class="col-md-6">
-              <address>
-                <strong>Billed To:</strong><br>
-                John Doe<br>
-                456 Elm Street<br>
-                Suite 12B<br>
-                Los Angeles, CA, USA
-              </address>
-            </div>
-            <div class="col-md-6 text-md-right">
-              <address>
-                <strong>Shipped To:</strong><br>
-                Sarah Smith<br>
-                789 Pine Avenue<br>
-                Floor 5<br>
-                San Francisco, CA, USA
-              </address>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <address>
-                <strong>Payment Method:</strong><br>
-                PayPal - john.doe@email.com<br>
-              </address>
-            </div>
-            <div class="col-md-6 text-md-right">
-              <address>
-                <strong>Order Date:</strong><br>
-                March 5, 2025<br><br>
-              </address>
-            </div>
-          </div>
-        </div>
-      </div>
+            <div class="main-content">
+                <section class="section">
+                    <div class="section-header">
+                        <h1>Invoice</h1>
+                        <div class="section-header-breadcrumb">
+                            <div class="breadcrumb-item active"><a href="#">Dashboard</a></div>
+                            <div class="breadcrumb-item">Payments</div>
+                        </div>
+                    </div>
+                    
+                     <div class="section-body">
+                        <div class="invoice" id="invoice">
+                            <div class="invoice-print">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="invoice-title">
+                                            <h2>Invoice</h2>
+                                            <div class="invoice-number">Order #<?= htmlspecialchars($payment['booking_id']); ?></div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <strong>Billed To:</strong><br>
+                                                <?= htmlspecialchars($payment['customer_name']); ?><br>
+                                                <?= htmlspecialchars($payment['address']); ?><br>
+                                                <?= htmlspecialchars($payment['email']); ?>
+                                            </div>
+                                            <div class="col-md-6 text-md-right">
+                                                <strong>Payment Method:</strong><br>
+                                                <?= htmlspecialchars($payment['payment_method'] ?? 'Unknown'); ?><br>
+                                                <?php if (!empty($payment['gcash_receipt'])): ?>
+                                                    <strong>GCash Receipt:</strong><br>
+                                                    <a href="<?= htmlspecialchars('../../uploads/receipts/' . basename($payment['gcash_receipt'])); ?>" target="_blank">
+                                                        <img src="<?= htmlspecialchars('../../uploads/receipts/' . basename($payment['gcash_receipt'])); ?>" 
+                                                             alt="GCash Receipt" 
+                                                             style="max-width: 300px; border: 1px solid #ccc;">
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <h5 class="section-title">Order Summary</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover table-md">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Item</th>
+                                                    <th class="text-center">Price</th>
+                                                    <th class="text-center">Quantity</th>
+                                                    <th class="text-right">Subtotal</th>
+                                                </tr>
+                                                <?php
+                                                $count = 1;
+                                                $total = 0;
+                                                foreach ($items as $item) {
+                                                    $total += $item['subtotal'];
+                                                ?>
+                                                    <tr>
+                                                        <td><?= $count++; ?></td>
+                                                        <td><?= htmlspecialchars($item['item_name']); ?></td>
+                                                        <td class="text-center">$<?= number_format($item['price'], 2); ?></td>
+                                                        <td class="text-center"><?= $item['quantity']; ?></td>
+                                                        <td class="text-right">$<?= number_format($item['subtotal'], 2); ?></td>
+                                                    </tr>
+                                                <?php } ?>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5><strong>Booking Information</strong></h5>
+                                        <p><strong>Booking ID:</strong> <?= htmlspecialchars($payment['booking_id']); ?></p>
+                                        <p><strong>Event Date:</strong> <?= htmlspecialchars($payment['event_date']); ?></p>
+                                        <p><strong>Number of Guests:</strong> <?= htmlspecialchars($payment['guests']); ?></p>
+                                        <p><strong>Venue:</strong> <?= htmlspecialchars($payment['venue'] ?? 'Not specified'); ?></p>
+                                    </div>
+                                    <div class="col-md-6 text-md-right">
+                                        <h5><strong>Payment Information</strong></h5>
+                                        <p><strong>Amount Paid:</strong> ₱<?= number_format($payment['amount'], 2); ?></p>
+                                        <p><strong>Payment Date:</strong> <?= htmlspecialchars($payment['payment_date']); ?></p>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="text-md-right">
+                                <button class="btn btn-success" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')">Confirm Payment</button>
+<button class="btn btn-danger" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'rejected')">Reject Payment</button>
 
-      <div class="row mt-4">
-        <div class="col-md-12">
-          <div class="section-title">Order Summary</div>
-          <p class="section-lead">All items here are final and cannot be deleted.</p>
-          <div class="table-responsive">
-            <table class="table table-striped table-hover table-md">
-              <tr>
-                <th data-width="40">#</th>
-                <th>Item</th>
-                <th class="text-center">Price</th>
-                <th class="text-center">Quantity</th>
-                <th class="text-right">Totals</th>
-              </tr>
-              <tr>
-                <td>1</td>
-                <td>Wedding Catering Package</td>
-                <td class="text-center">$1,200.00</td>
-                <td class="text-center">1</td>
-                <td class="text-right">$1,200.00</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Beverage Package (100 guests)</td>
-                <td class="text-center">$500.00</td>
-                <td class="text-center">1</td>
-                <td class="text-right">$500.00</td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Dessert Bar</td>
-                <td class="text-center">$300.00</td>
-                <td class="text-center">1</td>
-                <td class="text-right">$300.00</td>
-              </tr>
-            </table>
-          </div>
-          <div class="row mt-4">
-            <div class="col-lg-8">
-              <div class="section-title">Payment Method</div>
-              <p class="section-lead">We support multiple payment methods for your convenience.</p>
-              <div class="images">
-                <img src="assets/img/visa.png" alt="visa">
-                <img src="assets/img/mastercard.png" alt="mastercard">
-                <img src="assets/img/paypal.png" alt="paypal">
-              </div>
-            </div>
-            <div class="col-lg-4 text-right">
-              <div class="invoice-detail-item">
-                <div class="invoice-detail-name">Subtotal</div>
-                <div class="invoice-detail-value">$2,000.00</div>
-              </div>
-              <div class="invoice-detail-item">
-                <div class="invoice-detail-name">Tax (5%)</div>
-                <div class="invoice-detail-value">$100.00</div>
-              </div>
-              <div class="invoice-detail-item">
-                <div class="invoice-detail-name">Discount</div>
-                <div class="invoice-detail-value">-$50.00</div>
-              </div>
-              <hr class="mt-2 mb-2">
-              <div class="invoice-detail-item">
-                <div class="invoice-detail-name">Total</div>
-                <div class="invoice-detail-value invoice-detail-value-lg">$2,050.00</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <hr>
-    <div class="text-md-right">
-      <div class="float-lg-left mb-lg-0 mb-3">
-        <button class="btn btn-primary btn-icon icon-left"><i class="fas fa-credit-card"></i> Process Payment</button>
-        <button class="btn btn-danger btn-icon icon-left"><i class="fas fa-times"></i> Cancel</button>
-      </div>
-      <button class="btn btn-warning btn-icon icon-left"><i class="fas fa-print"></i> Print</button>
-    </div>
-  </div>
-</div>
+                                <button class="btn btn-warning btn-icon icon-left" onclick="printInvoice()">
+    <i class="fas fa-print"></i> Print
+</button><button class="btn btn-secondary btn-icon icon-left" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+
+                                </div>
+                                </div>
 
         </section>
       </div>
     </div>
   </div>
+  <script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+
+    function printInvoice() {
+        let invoiceContent = document.getElementById('invoice').innerHTML;
+        let originalContent = document.body.innerHTML;
+        document.body.innerHTML = invoiceContent;
+        window.print();
+        document.body.innerHTML = originalContent;
+        location.reload();
+    }
+
+    function updatePaymentStatus(paymentId, status) {
+    if (!confirm(`Are you sure you want to ${status} this payment?`)) {
+        return;
+    }
+
+    fetch('update_payment_status.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            payment_id: paymentId,
+            status: status
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment status updated successfully!');
+            location.reload();
+        } else {
+            alert('Error updating payment status: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating payment status.');
+    });
+}
+
+
+</script>
+
 
   <!-- General JS Scripts -->
   <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>

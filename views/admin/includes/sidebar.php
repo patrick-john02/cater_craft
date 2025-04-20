@@ -12,7 +12,7 @@
 
             <li class="menu-header">Bookings</li>
             <li><a class="nav-link" href="../../views/admin/bookings.php"><i class="fas fa-calendar-check"></i> <span>Manage Bookings</span></a></li>
-            <li><a class="nav-link" href="../../views/admin/payments.php"><i class="fas fa-money-bill-wave"></i> <span>Payments</span></a></li>
+            <!-- <li><a class="nav-link" href="../../views/admin/payments.php"><i class="fas fa-money-bill-wave"></i> <span>Payments</span></a></li> -->
 
             <li class="menu-header">Menu Management</li>
             <li><a class="nav-link" href="../../views/admin/menu.php"><i class="fas fa-utensils"></i> <span>Menu Items</span></a></li>

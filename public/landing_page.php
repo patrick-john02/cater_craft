@@ -1,7 +1,9 @@
 <?php
+session_start();
 require_once __DIR__ . '/../config/database.php'; // Include database connection
 require_once __DIR__ . '/../controllers/MenuCategoryController.php';
 require_once __DIR__ . '/../controllers/UserController.php';
+$isAuthenticated = isset($_SESSION['user']);
 
 $pdo = Database::getConnection();
 
@@ -49,7 +51,7 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
     <ul>
     <?php foreach ($categories as $category): ?>
         <li>
-            <a href="categories.php?category_id=<?= $category['id'] ?>">
+            <a href="#" class="category-link" data-category-id="<?= $category['id'] ?>" data-logged-in="<?= $isAuthenticated ? '1' : '0' ?>">
                 <?= htmlspecialchars($category['category']) ?>
             </a>
         </li>
@@ -273,8 +275,8 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
     <script src="../assets/organi/js/owl.carousel.min.js"></script>
     <script src="../assets/organi/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     let calendarEl = document.getElementById('calendar');
@@ -316,6 +318,31 @@ function checkAvailability(selectedDate) {
         }
     });
 }
+document.querySelectorAll('.category-link').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link action
+
+            let isAuthenticated = this.getAttribute('data-logged-in') === "1";
+            let categoryId = this.getAttribute('data-category-id');
+
+            if (!isAuthenticated) {
+                Swal.fire({
+                    title: "You are not logged in",
+                    text: "Do you want to go to the login page?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, go to login",
+                    cancelButtonText: "Cancel"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "login.php";
+                    }
+                });
+            } else {
+                window.location.href = "categories.php?category_id=" + categoryId;
+            }
+        });
+    });
 </script>
 </body>
 </html>

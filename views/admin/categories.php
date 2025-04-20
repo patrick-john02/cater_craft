@@ -1,3 +1,10 @@
+<?php
+require '../../config/database.php';
+
+$pdo = Database::getConnection();
+$stmt = $pdo->query("SELECT * FROM menu_categories ORDER BY id DESC");
+$categories = $stmt->fetchAll();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,8 +13,9 @@
   <title>Cater Categories</title>
 
   <!-- General CSS Files -->
-  <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/bootstrap/css/bootstrap.min.css">
+
 
   <!-- CSS Libraries -->
 
@@ -52,49 +60,66 @@
             </button>
           </div>
           <div class="card-body">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Category Name</th>
-                  <th scope="col">Description</th>
-                  <th scope="col">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Appetizers</td>
-                  <td>Light starters before the main course.</td>
-                  <td>
-                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">2</th>
-                  <td>Main Course</td>
-                  <td>Hearty and filling dishes.</td>
-                  <td>
-                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">3</th>
-                  <td>Desserts</td>
-                  <td>Sweet treats to end the meal.</td>
-                  <td>
-                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <table class="table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Category Name</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($categories as $category): ?>
+            <tr>
+                <th scope="row"><?php echo $category['id']; ?></th>
+                <td><?php echo htmlspecialchars($category['category']); ?></td>
+                <td>
+                    <button class="btn btn-warning btn-sm edit-btn" data-id="<?php echo $category['id']; ?>"
+                            data-name="<?php echo htmlspecialchars($category['category']); ?>">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $category['id']; ?>">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
           </div>
         </div>
       </div>
     </div>
+    </section>
+    </div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Category</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form action="update_category.php" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_category_id" name="category_id">
+                    <div class="form-group">
+                        <label>Category Name</label>
+                        <input type="text" id="edit_category_name" name="category_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
     <!-- Add Category Modal -->
     <div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addCategoryLabel" aria-hidden="true">
@@ -107,27 +132,56 @@
             </button>
           </div>
           <div class="modal-body">
-            <form>
-              <div class="form-group">
-                <label>Category Name</label>
-                <input type="text" class="form-control" placeholder="Enter category name">
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <textarea class="form-control" rows="3" placeholder="Enter description"></textarea>
-              </div>
-              <button type="submit" class="btn btn-primary">Save Category</button>
-            </form>
+          <form action="add_category.php" method="POST">
+    <div class="form-group">
+        <label>Category Name</label>
+        <input type="text" name="category_name" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        <textarea name="category_description" class="form-control" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Category</button>
+</form>
+
           </div>
         </div>
       </div>
     </div>
 
-  </section>
-</div>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Handle edit button click
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
 
-  <!-- General JS Scripts -->
+            document.getElementById('edit_category_id').value = id;
+            document.getElementById('edit_category_name').value = name;
+
+            $('#editCategoryModal').modal('show');
+        });
+    });
+
+    // Handle delete button click
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            if (confirm("Are you sure you want to delete this category?")) {
+                const id = this.getAttribute('data-id');
+
+                fetch('delete_category.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + id
+                }).then(() => location.reload());
+            }
+        });
+    });
+});
+
+</script>
   <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/tooltip.js"></script>
@@ -135,12 +189,6 @@
   <script src="../../assets/admin/cater-admin/assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/moment.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/stisla.js"></script>
-  
-  <!-- JS Libraies -->
-
-  <!-- Page Specific JS File -->
-  
-  <!-- Template JS File -->
   <script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
 </body>

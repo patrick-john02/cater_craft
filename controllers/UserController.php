@@ -17,6 +17,10 @@ class UserController {
     public function getPhoneNumber(){
         return $this->userModel->fetchAdminPhoneNumber();
     }
+    public function getAdminDetails($userId) {
+        $userModel = new User($this->pdo);
+        return $userModel->getUserById($userId);
+    }
     public function register() {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $name = $_POST['first_name'] . ' ' . $_POST['last_name'];

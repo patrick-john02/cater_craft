@@ -1,6 +1,14 @@
 <?php
 session_start();
-session_destroy();
+session_unset();  // Clear all session variables
+session_destroy(); // Destroy the session
+
+// Prevent browser from caching the page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+// Redirect to landing page
 header("Location: ../../public/landing_page.php");
 exit();
 ?>

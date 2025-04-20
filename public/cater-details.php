@@ -38,6 +38,39 @@ $item = $controller->showItemDetails($item_id);
     <link rel="stylesheet" href="../assets/organi/css/owl.carousel.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/style.css" type="text/css">
+    <style>
+        .pro-qty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+    max-width: 120px;
+}
+
+.pro-qty .qty-btn {
+    background: #f5f5f5;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: 0.3s;
+}
+
+.pro-qty .qty-btn:hover {
+    background: #e0e0e0;
+}
+
+.pro-qty input {
+    width: 50px;
+    height: 40px;
+    text-align: center;
+    border: none;
+    font-size: 16px;
+}
+
+    </style>
 </head>
 
 <body>
@@ -89,10 +122,16 @@ $item = $controller->showItemDetails($item_id);
         <input type="hidden" name="booking_id" value="<?= $_SESSION['booking_id'] ?? 1 ?>">
 
         <div class="product__details__quantity">
-            <div class="quantity">
-                <input type="number" name="quantity" value="1" min="1" required>
-            </div>
+    <div class="quantity">
+        <div class="pro-qty">
+            <button type="button" class="qty-btn minus">-</button>
+            <input type="text" name="quantity" id="quantity" value="1" min="1" required>
+            <button type="button" class="qty-btn plus">+</button>
         </div>
+    </div>
+</div>
+
+    </div>
         <button type="submit" class="primary-btn">ADD TO CART</button>
     </form>
 <?php endif; ?>
@@ -105,13 +144,28 @@ $item = $controller->showItemDetails($item_id);
     <script src="../assets/organi/js/mixitup.min.js"></script>
     <script src="../assets/organi/js/owl.carousel.min.js"></script>
     <script src="../assets/organi/js/main.js"></script>
-    <script>
-    $(document).ready(function () {
+
+
+  <script>
+  $(document).ready(function () {
+    // Quantity increment and decrement
+    $(".qty-btn").click(function () {
+        let input = $("#quantity");
+        let currentVal = parseInt(input.val());
+
+        if ($(this).hasClass("plus")) {
+            input.val(currentVal + 1);
+        } else if ($(this).hasClass("minus") && currentVal > 1) {
+            input.val(currentVal - 1);
+        }
+    });
+
+    // Handle Add to Cart AJAX
     $("#addToCartForm").submit(function (event) {
-        event.preventDefault(); 
+        event.preventDefault();
 
         $.ajax({
-            url: "../routes.php?route=add_to_cart",  
+            url: "../routes.php?route=add_to_cart",
             type: "POST",
             data: $(this).serialize() + "&add_to_cart=true",
             dataType: "json",
@@ -122,6 +176,9 @@ $item = $controller->showItemDetails($item_id);
                         message: response.message,
                         position: "topRight"
                     });
+
+                    // 🔹 Update the cart count and total price in navbar
+                    updateCartDetails();
                 } else {
                     iziToast.error({
                         title: "Error",
@@ -140,6 +197,8 @@ $item = $controller->showItemDetails($item_id);
         });
     });
 });
+
 </script>
+
 </body>
 </html>
