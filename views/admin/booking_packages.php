@@ -2,9 +2,9 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../models/AdminManageBooking.php';
 $bookingModel = new ManageBooking();
-$bookings = $bookingModel->getAllBookings();
-if (!is_array($bookings)) {
-    $bookings = [];
+$packageBookings = $bookingModel->getAllPackageBookings();
+if (!is_array($packageBookings)) {
+    $packageBookings = [];
 }
 ?>
 <!DOCTYPE html>
@@ -32,47 +32,72 @@ if (!is_array($bookings)) {
 <body>
   <div id="app">
     <div class="main-wrapper main-wrapper-1">
-    <?php include 'includes/navbar.php'?>
-    <?php include 'includes/sidebar.php'?>
+      <?php include 'includes/navbar.php'?>
+      <?php include 'includes/sidebar.php'?>
       <div class="main-content">
         <section class="section">
           <div class="section-header">
-            <h1>Booking Management</h1>
+            <h1>Package Booking Management</h1>
             <div class="section-header-breadcrumb">
               <div class="breadcrumb-item active"><a href="admin_dashboard.php">Dashboard</a></div>
-              <div class="breadcrumb-item"><a href="#">Bookings</a></div>
+              <div class="breadcrumb-item">Package Bookings</div>
             </div>
           </div>
           <div class="section-body">
             <div class="row">
               <div class="col-12">
                 <div class="card">
-                  <div class="card-header">
-                  </div>
+                  <div class="card-header"><h4>All Package Bookings</h4></div>
                   <div class="card-body">
                     <div class="table-responsive">
-                    <table class="table table-striped">
+                      <table class="table table-striped">
                         <thead>
                           <tr>
                             <th>#</th>
                             <th>Customer Name</th>
+                            <th>Package Name</th>
                             <th>Booking Date</th>
-                            <th>Event Type</th>
-                            <th>Guests</th>
                             <th>Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <?php foreach ($bookings as $index => $booking): ?>
+                          <?php foreach ($packageBookings as $index => $booking): ?>
                             <tr>
                               <td><?= $index + 1; ?></td>
                               <td><?= htmlspecialchars($booking['customer_name']); ?></td>
-                              <td><?= htmlspecialchars($booking['event_date']); ?></td>
-                              <td><?= htmlspecialchars($booking['event_type']); ?></td>
-                              <td><?= htmlspecialchars($booking['guests']); ?></td>
+                              <td><?= htmlspecialchars($booking['package_name']); ?></td>
+                              <td><?= htmlspecialchars($booking['booking_date']); ?></td>
                               <td><div class="badge badge-success"><?= htmlspecialchars($booking['status']); ?></div></td>
-                              <td><a href="payments.php?booking_id=<?= $booking['id']; ?>" class="btn btn-primary">View Payment</a></td>
+                              <td>
+  <?php if (!empty($booking['proof_image'])): ?>
+    <img src="../../uploads/gcash_proofs/<?= htmlspecialchars($booking['proof_image']) ?>" alt="GCash Proof" class="img-thumbnail" style="width: 70px; cursor: pointer;" data-toggle="modal" data-target="#proofModal<?= $booking['id'] ?>">
+    
+    <!-- Modal -->
+    <div class="modal fade" id="proofModal<?= $booking['id'] ?>" tabindex="-1" role="dialog" aria-labelledby="proofModalLabel<?= $booking['id'] ?>" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="proofModalLabel<?= $booking['id'] ?>">Payment Proof</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-center">
+            <img src="../../uploads/gcash_proofs/<?= htmlspecialchars($booking['proof_image']) ?>" alt="Full GCash Proof" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </div>
+  <?php else: ?>
+    <span class="text-muted">No proof</span>
+  <?php endif; ?>
+    <!-- Reject Form -->
+    <form action="reject_booking.php" method="POST" style="display: inline-block; margin-left: 10px;" onsubmit="return confirm('Are you sure you want to reject this booking?');">
+    <input type="hidden" name="booking_id" value="<?= $booking['id'] ?>">
+    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+  </form>
+</td>
                             </tr>
                           <?php endforeach; ?>
                         </tbody>

@@ -1,14 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/DashboardModel.php';
-
 class DashboardController {
     private $dashboardModel;
-
     public function __construct($pdo) {
         $this->dashboardModel = new DashboardModel($pdo);
     }
-
     public function getDashboardStats() {
         return [
             'total_customers' => $this->dashboardModel->getTotalCustomers(),
@@ -19,8 +16,6 @@ class DashboardController {
     }
     public function getBookingChartData() {
         $chartData = $this->dashboardModel->getBookingsPerDay();
-
-        // Ensure correct JSON output
         header('Content-Type: application/json');
         echo json_encode($chartData);
         exit;
@@ -32,10 +27,8 @@ class DashboardController {
         exit;
     }
 }
-
-// Handle AJAX request for sales
 if (isset($_GET['salesData'])) {
-    $db = Database::getConnection();  // ✅ Corrected method to get database connection
+    $db = Database::getConnection();
     $controller = new DashboardController($db);
     $controller->getSalesData();
 }

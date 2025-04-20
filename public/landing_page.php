@@ -60,9 +60,9 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
 
     </div>
     <br>
-    <button class="site-btn" data-toggle="modal" data-target="#dateAvailabilityModal">
+    <!-- <button class="site-btn" data-toggle="modal" data-target="#dateAvailabilityModal">
                             CHECK DATE AVAILABILITY
-                        </button>
+                        </button> -->
 </div>
 
             <div class="col-lg-9">

@@ -7,7 +7,6 @@ class MenuCategoryController {
     public function __construct($pdo) {
         $this->model = new MenuCategory($pdo);
     }
-
     public function index() {
         return $this->model->getAllCategories();
     }

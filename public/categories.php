@@ -1,21 +1,16 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../controllers/MenuItemController.php';
-
 $pdo = Database::getConnection();
-
 $category_id = $_GET['category_id'] ?? 1; 
-
 $controller = new MenuItemController($pdo);
 $data = $controller->showByCategory($category_id);
-
 $categories = $data['categories'];
 $menu_items = $data['menu_items'];
 $category_name = $data['category_name'];
 ?>
 <!DOCTYPE html>
 <html lang="zxx">
-
 <head>
     <meta charset="UTF-8">
     <meta name="description" content="Ogani Template">
@@ -37,8 +32,6 @@ $category_name = $data['category_name'];
 </head>
 <body>
 <?php include('includes/navbar.php');?>
-
-    <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-section set-bg" data-setbg="../assets/organi/img/blog/details/1.jpg">
         <div class="container">
             <div class="row">
@@ -54,62 +47,11 @@ $category_name = $data['category_name'];
             </div>
         </div>
     </section>
-    <!-- Breadcrumb Section End -->
-
-    <!-- Catregories Item Section Begin -->
     <section class="product spad">
         <div class="container">
             <div class="row">
                 <div class="col-lg-3 col-md-5">
                     <div class="sidebar">
-                       
-                        
-                        <div class="sidebar__item">
-                            <h4>Sizes</h4>
-                            <div class="sidebar__item__size">
-                                <label for="large">
-                                    Large
-                                    <input type="radio" id="large">
-                                </label>
-                            </div>
-                            <div class="sidebar__item__size">
-                                <label for="medium">
-                                    Medium
-                                    <input type="radio" id="medium">
-                                </label>
-                            </div>
-                            <div class="sidebar__item__size">
-                                <label for="small">
-                                    Small
-                                    <input type="radio" id="small">
-                                </label>
-                            </div>
-                            <div class="sidebar__item__size">
-                                <label for="tiny">
-                                    Tiny
-                                    <input type="radio" id="tiny">
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="sidebar__item">
-                            <h4>Price</h4>
-                            <div class="price-range-wrap">
-                                <div class="price-range ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"
-                                    data-min="10" data-max="540">
-                                    <div class="ui-slider-range ui-corner-all ui-widget-header"></div>
-                                    <span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default"></span>
-                                    <span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default"></span>
-                                </div>
-                                <div class="range-slider">
-                                    <div class="price-input">
-                                        <input type="text" id="minamount">
-                                        <input type="text" id="maxamount">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                       
                     </div>
                 </div>
                 <div class="col-lg-9 col-md-7">
@@ -118,7 +60,7 @@ $category_name = $data['category_name'];
                         <h2>List of <?= htmlspecialchars($category_name) ?></h2> 
                     </div>
                       
-                    <div class="filter__item">
+                    <!-- <div class="filter__item">
                         <div class="row">
                             <div class="col-lg-4 col-md-5">
                                 <div class="filter__sort">
@@ -141,7 +83,7 @@ $category_name = $data['category_name'];
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="row">
                     <?php foreach ($menu_items as $item): ?>
     <div class="col-lg-4 col-md-6 col-sm-6">
@@ -165,19 +107,17 @@ $category_name = $data['category_name'];
         <?php endforeach; ?>
     </div>
 </div>
-            <div class="product__pagination">
+            <!-- <div class="product__pagination">
                 <a href="#">1</a>
                 <a href="#">2</a>
                 <a href="#">3</a>
                 <a href="#"><i class="fa fa-long-arrow-right"></i></a>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>
 </section>
-    <!-- Product Section End -->
-
 <?php include('includes/footer.php');?>
 
     <!-- Js Plugins -->

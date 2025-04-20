@@ -1,29 +1,17 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+if (session_status() === PHP_SESSION_NONE){session_start();}
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../controllers/UserController.php';
 require_once __DIR__ . '/../../controllers/CartController.php';
-
 $isAuthenticated = isset($_SESSION['user']);
 $userName = $isAuthenticated ? $_SESSION['user']['name'] : null;
-
-// Database connection
 $pdo = Database::getConnection();
-
 $userController = new UserController($pdo);
 $adminEmail = $userController->getAdminEmail();
-
 $cartController = new CartController();
 $booking_id = $_SESSION['booking_id'] ?? 1;
-
-// Fetch cart count and total amount
 $cartCount = $cartController->getCartCount($booking_id);
-
 ?>
-
 <head>
     <style>
         .dropdown {
@@ -88,14 +76,14 @@ $cartCount = $cartController->getCartCount($booking_id);
                 <li><a href="./shop-grid.html">Shop</a></li>
                 <li><a href="./shop-grid.html">Services</a></li>
                
-                <li><a href="./blog.html">Recent</a></li>
+               
                 <li><a href="./contact.html">Report</a></li>
             </ul>
         </nav>
         <div id="mobile-menu-wrap"></div>
         <div class="header__top__right__social">
-            <a href="#"><i class="fa fa-facebook"></i></a>
-            <a href="#"><i class="fa fa-instagram"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=100087983386234"><i class="fa fa-facebook"></i></a>
+            <!-- <a href="#"><i class="fa fa-instagram"></i></a> -->
         </div>
         <div class="humberger__menu__contact">
             <ul>
@@ -120,8 +108,8 @@ $cartCount = $cartController->getCartCount($booking_id);
                     <div class="col-lg-6 col-md-6">
                         <div class="header__top__right">
                             <div class="header__top__right__social">
-                                <a href="#"><i class="fa fa-facebook"></i></a>
-                                <a href="#"><i class="fa fa-instagram"></i></a>
+                                <a href="https://www.facebook.com/profile.php?id=100087983386234"><i class="fa fa-facebook"></i></a>
+                                <!-- <a href="#"><i class="fa fa-instagram"></i></a> -->
                             </div>
                                     <?php if ($isAuthenticated) : ?>
                                     <div class="header__top__right__auth">
@@ -158,9 +146,12 @@ $cartCount = $cartController->getCartCount($booking_id);
                             <li class="active"><a href="./landing_page.php">Home</a></li>
                             
                             <li><a href="./services.php">Package</a></li>
-                            <li><a href="./blog.html">Service</a></li>
-                            <li><a href="./contact.html">Report</a></li>
-                            <li><a href="./aboutus.html">about us</a></li>
+                            
+                            
+                            <li><a href="./report.php">Report</a></li>
+                            <li><a href="./aboutus.php">about us</a></li>
+                            <li><a href="./order_history.php"> orders</a></li>
+
                         </ul>
                     </nav>
                 </div>

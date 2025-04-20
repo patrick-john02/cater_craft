@@ -2,26 +2,19 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../controllers/CartController.php';
-
 $isAuthenticated = isset($_SESSION['user']);
-
 $cartController = new CartController();
-
 if (!isset($_SESSION['booking_id'])) {
     $_SESSION['booking_id'] = 1;
 }
 $booking_id = $_SESSION['booking_id'];
-
 $cartItems = $cartController->fetchCartItems($booking_id);
 $totalAmount = $cartController->fetchCartTotal($booking_id);
 ?>
-
 <!DOCTYPE html>
 <html lang="zxx">
-
 <head>
     <meta charset="UTF-8">
     <meta name="description" content="Ogani Template">
@@ -29,9 +22,7 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Cater | Cart</title>
-    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
-    <!-- Css Styles -->
     <link rel="stylesheet" href="../assets/organi/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/font-awesome.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/elegant-icons.css" type="text/css">
@@ -43,8 +34,6 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
 </head>
 <body>
 <?php include('includes/navbar.php');?>
- 
-    <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-section set-bg" data-setbg="../assets/organi/img/blog/details/1.jpg">
         <div class="container">
             <div class="row">
@@ -60,9 +49,6 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
             </div>
         </div>
     </section>
-    <!-- Breadcrumb Section End -->
-
-    <!-- Cater Cart Section Begin -->
     <section class="shoping-cart spad">
     <div class="container">
         <div class="shoping__cart__table">
@@ -90,7 +76,6 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
     <input type="hidden" name="item_id" value="<?= htmlspecialchars($item['id']) ?>">
     <button type="submit" name="remove_from_cart">❌</button>
 </form>
-
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -100,7 +85,6 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
     </tbody>
 </table>
         </div>
-
         <div class="shoping__checkout">
     <h5>Cart Total</h5>
     <ul>
@@ -108,14 +92,10 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
         <li>Total <span>₱<?= number_format($totalAmount, 2) ?></span></li>
     </ul>
     <a href="checkout.php" class="primary-btn" <?= empty($cartItems) ? 'style="pointer-events: none; opacity: 0.5;"' : '' ?>>PROCEED TO CHECKOUT</a>
-
 </div>
     </div>
 </section>
-    <!-- Shoping Cart Section End -->
     <?php include('includes/footer.php');?>
-
-    <!-- Js Plugins -->
     <script src="../assets/organi/js/jquery-3.3.1.min.js"></script>
     <script src="../assets/organi/js/bootstrap.min.js"></script>
     <script src="../assets/organi/js/jquery.nice-select.min.js"></script>

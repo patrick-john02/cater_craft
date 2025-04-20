@@ -32,9 +32,9 @@ if (isset($_SESSION['user']) && $_SESSION['user']['user_type_id'] == 2) {
           <div class="d-sm-none d-lg-inline-block">Hi, <?= $adminName; ?></div>
         </a>
         <div class="dropdown-menu dropdown-menu-right">
-          <a href="../../views/admin/profile.php" class="dropdown-item has-icon">
+          <!-- <a href="../../views/admin/profile.php" class="dropdown-item has-icon">
             <i class="far fa-user"></i> Profile
-          </a>
+          </a> -->
           <div class="dropdown-divider"></div>
           <a href="./logout.php" class="dropdown-item has-icon text-danger">
             <i class="fas fa-sign-out-alt"></i> Logout

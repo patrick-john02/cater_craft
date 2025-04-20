@@ -1,3 +1,15 @@
+<?php
+require_once '../config/database.php'; 
+$pdo = Database::getConnection();
+
+$packages = [];
+try {
+    $stmt = $pdo->query("SELECT * FROM packages ORDER BY created_at DESC");
+    $packages = $stmt->fetchAll();
+} catch (PDOException $e) {
+    die("Failed to fetch packages: " . $e->getMessage());
+}
+?>
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -22,6 +34,30 @@
     <link rel="stylesheet" href="../assets/organi/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/style.css" type="text/css">
 </head>
+<style>
+    .uniform-image-box {
+    width: 100%;
+    height: 250px; /* Adjust this height as needed */
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uniform-image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ensures image covers the box without stretching */
+    transition: transform 0.3s ease;
+}
+
+.uniform-image-box img:hover {
+    transform: scale(1.05); /* optional: subtle zoom on hover */
+}
+
+    </style>
 
 <body>
 <?php include('includes/navbar.php');?>
@@ -33,11 +69,12 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="blog__details__hero__text">
-                        <h2>The name of the Catering Company</h2>
+                        <h2> Ingga's Catering </h2>
                         <ul>
-                            <li>Location</li>
-                            <li>Time Availability</li>
-                            <li>Contact</li>
+                            <li>Locations: San Jose Village Extension Atulayan Sur, Tuguegarao City, Philippines</li>
+                            <li>Time Availability: 24/7</li>
+                            <li>Contact: 0965 310 1013</li>
+                            <li>Email: joymaangundan@gmail.com</li>
                         </ul>
                     </div>
                 </div>
@@ -49,58 +86,38 @@
     <!-- Related Blog Section Begin -->
     <section class="related-blog spad">
         <div class="container">
+        <div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="section-title related-blog-title">
+            <h2>List of Menu</h2>
+        </div>
+    </div>
+    <div class="col-lg-6 text-end">
+        <a href="my_orders.php" class="btn btn-success mt-2">
+            <i class="fa fa-list"></i> My Orders
+        </a>
+    </div>
+</div>
             <div class="row">
-                <div class="col-lg-12">
-                    <div class="section-title related-blog-title">
-                        <h2>List of Menu</h2>
-                    </div>
-                </div>
+            <?php foreach ($packages as $package): ?>
+    <div class="col-lg-4 col-md-4 col-sm-6">
+        <div class="blog__item">
+        <div class="blog__item__pic uniform-image-box">
+    <img src="./uploads/<?= htmlspecialchars($package['image']) ?>" alt="<?= htmlspecialchars($package['name']) ?>">
+</div>
+
+            <div class="blog__item__text">
+                <ul>
+                    <li><i class="fa fa-calendar-o"></i> <?= date('F j, Y', strtotime($package['created_at'])) ?></li>
+                </ul>
+                <h5><a href="#"><?= htmlspecialchars($package['name']) ?></a></h5>
+                <p><?= nl2br(htmlspecialchars($package['description'])) ?></p>
+                <p><strong>Price: ₱<?= number_format($package['price'], 2) ?></strong></p>
+                <a href="order.php?package_id=<?= $package['id'] ?>" class="btn btn-sm btn-primary mt-2">Order Now</a>
             </div>
-            <div class="row">
-                <div class="col-lg-4 col-md-4 col-sm-6">
-                    <div class="blog__item">
-                        <div class="blog__item__pic">
-                        <img src="../assets/organi/foods/3.jpg" alt="">
-                        </div>
-                        <div class="blog__item__text">
-                            <ul>
-                                <li><i class="fa fa-calendar-o"></i> May 4,2019</li>
-                            </ul>
-                            <h5><a href="#">Cooking tips make cooking simple</a></h5>
-                            <p>Sed quia non numquam modi tempora indunt ut labore et dolore magnam aliquam quaerat </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-4 col-sm-6">
-                    <div class="blog__item">
-                        <div class="blog__item__pic">
-                        <img src="../assets/organi/foods/2.jpg" alt="">
-                        </div>
-                        <div class="blog__item__text">
-                            <ul>
-                                <li><i class="fa fa-calendar-o"></i> May 4,2019</li>
-                               
-                            </ul>
-                            <h5><a href="#">6 ways to prepare breakfast for 30</a></h5>
-                            <p>Sed quia non numquam modi tempora indunt ut labore et dolore magnam aliquam quaerat </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-4 col-sm-6">
-                    <div class="blog__item">
-                        <div class="blog__item__pic">
-                            <img src="../assets/organi/foods/1.jpg" alt="">
-                        </div>
-                        <div class="blog__item__text">
-                            <ul>
-                                <li><i class="fa fa-calendar-o"></i> May 4,2019</li>
-                               
-                            </ul>
-                            <h5><a href="#">Visit the clean farm in the US</a></h5>
-                            <p>Sed quia non numquam modi tempora indunt ut labore et dolore magnam aliquam quaerat </p>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
+<?php endforeach; ?>
             </div>
         </div>
     </section>

@@ -57,7 +57,7 @@ $menuItems = $stmt->fetchAll();
                 <div class="section-header">
                     <h1>Menu</h1>
                     <div class="section-header-breadcrumb">
-                        <div class="breadcrumb-item active"><a href="#">Dashboard</a></div>
+                        <div class="breadcrumb-item active"><a href="admin_dashboard.php">Dashboard</a></div>
                         <div class="breadcrumb-item"><a href="menu.php">Menu</a></div>
                     </div>
                 </div>

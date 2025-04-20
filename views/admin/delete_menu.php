@@ -1,15 +1,10 @@
 <?php
 require_once '../../config/database.php';
-
 $pdo = Database::getConnection();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     $id = $_POST['id'];
-
-    // Delete the menu item
     $query = "DELETE FROM menu_items WHERE id = ?";
     $stmt = $pdo->prepare($query);
-
     if ($stmt->execute([$id])) {
         echo json_encode(["status" => "success", "message" => "Menu item deleted successfully!"]);
     } else {

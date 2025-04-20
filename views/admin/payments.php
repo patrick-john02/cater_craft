@@ -1,16 +1,11 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
-
 try {
     $pdo = Database::getConnection();
-
-    // Validate booking_id
     $booking_id = isset($_GET['booking_id']) ? intval($_GET['booking_id']) : 0;
     if ($booking_id <= 0) {
         throw new Exception("Invalid booking ID.");
     }
-
-    // Fetch payment details
     $sql = "SELECT 
     p.id AS payment_id, b.id AS booking_id, u.name AS customer_name, 
     u.address, u.email, b.event_date, b.event_time, b.guests, 
@@ -21,49 +16,33 @@ JOIN bookings b ON p.booking_id = b.id
 JOIN users u ON b.customer_id = u.id
 LEFT JOIN payment_methods pm ON p.payment_method_id = pm.id
 WHERE p.booking_id = :booking_id";
-
-
-
     $stmt = $pdo->prepare($sql);
     $stmt->execute(['booking_id' => $booking_id]);
     $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-
     if (!$payment) {
         throw new Exception("No payment found for this booking.");
     }
-
-    // Fetch booking items
     $items_sql = "SELECT mi.name AS item_name, bi.quantity, mi.price, (bi.quantity * mi.price) AS subtotal
                   FROM booking_items bi
                   JOIN menu_items mi ON bi.menu_item_id = mi.id
                   WHERE bi.booking_id = :booking_id";
-
     $items_stmt = $pdo->prepare($items_sql);
     $items_stmt->execute(['booking_id' => $booking_id]);
     $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
-
 } catch (Exception $e) {
     die("<p style='color: red;'>Error: " . htmlspecialchars($e->getMessage()) . "</p>");
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
   <title>Cater Payments</title>
-
-  <!-- General CSS Files -->
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/fontawesome/css/all.min.css">
-
-  <!-- CSS Libraries -->
-
-  <!-- Template CSS -->
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/css/style.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/css/components.css">
-<!-- Start GA -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -72,8 +51,7 @@ WHERE p.booking_id = :booking_id";
 
   gtag('config', 'UA-94034622-3');
 </script>
-<!-- /END GA --></head>
-
+</head>
 <body>
     <div id="app">
         <div class="main-wrapper main-wrapper-1">
@@ -89,7 +67,6 @@ WHERE p.booking_id = :booking_id";
                             <div class="breadcrumb-item">Payments</div>
                         </div>
                     </div>
-                    
                      <div class="section-body">
                         <div class="invoice" id="invoice">
                             <div class="invoice-print">
@@ -122,7 +99,6 @@ WHERE p.booking_id = :booking_id";
                                         </div>
                                     </div>
                                 </div>
-                                
                                 <div class="row mt-4">
                                     <div class="col-md-12">
                                         <h5 class="section-title">Order Summary</h5>
@@ -153,7 +129,6 @@ WHERE p.booking_id = :booking_id";
                                         </div>
                                     </div>
                                 </div>
-                                
                                 <div class="row">
                                     <div class="col-md-6">
                                         <h5><strong>Booking Information</strong></h5>
@@ -168,22 +143,17 @@ WHERE p.booking_id = :booking_id";
                                         <p><strong>Payment Date:</strong> <?= htmlspecialchars($payment['payment_date']); ?></p>
                                     </div>
                                 </div>
-                                
                                 <hr>
-                                
                                 <div class="text-md-right">
                                 <button class="btn btn-success" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')">Confirm Payment</button>
 <button class="btn btn-danger" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'rejected')">Reject Payment</button>
-
                                 <button class="btn btn-warning btn-icon icon-left" onclick="printInvoice()">
     <i class="fas fa-print"></i> Print
 </button><button class="btn btn-secondary btn-icon icon-left" onclick="goBack()">
         <i class="fas fa-arrow-left"></i> Back
     </button>
-
                                 </div>
                                 </div>
-
         </section>
       </div>
     </div>
@@ -193,12 +163,10 @@ WHERE p.booking_id = :booking_id";
         window.history.back();
     }
 </script>
-
 <script>
     function goBack() {
         window.history.back();
     }
-
     function printInvoice() {
         let invoiceContent = document.getElementById('invoice').innerHTML;
         let originalContent = document.body.innerHTML;
@@ -212,7 +180,6 @@ WHERE p.booking_id = :booking_id";
     if (!confirm(`Are you sure you want to ${status} this payment?`)) {
         return;
     }
-
     fetch('update_payment_status.php', {
         method: 'POST',
         headers: {
@@ -237,12 +204,7 @@ WHERE p.booking_id = :booking_id";
         alert('An error occurred while updating payment status.');
     });
 }
-
-
 </script>
-
-
-  <!-- General JS Scripts -->
   <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/tooltip.js"></script>
@@ -250,12 +212,6 @@ WHERE p.booking_id = :booking_id";
   <script src="../../assets/admin/cater-admin/assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/moment.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/stisla.js"></script>
-  
-  <!-- JS Libraies -->
-
-  <!-- Page Specific JS File -->
-  
-  <!-- Template JS File -->
   <script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
 </body>

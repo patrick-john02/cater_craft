@@ -1,28 +1,37 @@
 <?php
 session_start();
+
 require_once __DIR__ . '/../controllers/CartController.php';
 require_once __DIR__ . '/../config/database.php';
+$isAuthenticated = isset($_SESSION['user']);
+$firstName = $lastName = $email = $phone = $address = '';
+
+$pdo = Database::getConnection();
+$userId = $_SESSION['user']['id'];
+
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$userId]);
+$userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$firstName = explode(' ', $userData['name'])[0];
+$lastName = explode(' ', $userData['name'])[1] ?? '';
+$email = $userData['email'];
+$phone = $userData['phone'];
+$address = $userData['address'];
 
 $cartController = new CartController();
-
-// Ensure booking ID is set in the session
 if (!isset($_SESSION['booking_id']) || empty($_SESSION['booking_id'])) {
-    $_SESSION['booking_id'] = uniqid('BKG_'); // Generate a unique booking ID
+    $_SESSION['booking_id'] = uniqid('BKG_'); 
 }
-
-$booking_id = $_SESSION['booking_id']; // Assign session booking ID to a variable
-
+$booking_id = $_SESSION['booking_id'];
 $cartItems = $cartController->fetchCartItems($booking_id);
 $totalAmount = $cartController->fetchCartTotal($booking_id);
-
 $pdo = Database::getConnection();
 $stmt = $pdo->query("SELECT * FROM payment_methods");
 $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <!DOCTYPE html>
 <html lang="zxx">
-
 <head>
     <meta charset="UTF-8">
     <meta name="description" content="Ogani Template">
@@ -30,11 +39,7 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Cater | Checkout</title>
-
-    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
-
-    <!-- Css Styles -->
     <link rel="stylesheet" href="../assets/organi/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/font-awesome.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/elegant-icons.css" type="text/css">
@@ -44,10 +49,8 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="../assets/organi/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/style.css" type="text/css">
 </head>
-
 <body>
 <?php include('includes/navbar.php');?>
- <!-- Breadcrumb Section Begin -->
  <section class="breadcrumb-section set-bg" data-setbg="../assets/organi/img/blog/details/1.jpg">
         <div class="container">
             <div class="row">
@@ -64,9 +67,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </section>
-    <!-- Breadcrumb Section End -->
-
-    <!-- Checkout Section Begin -->
     <section class="checkout spad">
         <div class="container">
             <div class="row">
@@ -77,41 +77,38 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="alert alert-success"><?= $_SESSION['success'] ?></div>
     <?php unset($_SESSION['success']); ?>
 <?php endif; ?>
-
-
                 <form action="../controllers/CheckoutController.php?action=processCheckout" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="booking_id" value="<?= htmlspecialchars($booking_id) ?>">
                 <div class="row">
-                    <div class="col-lg-6">
+                    <div class="col-lg-12">
                         <div class="checkout__input">
-                            <p>First Name<span>*</span></p>
-                            <input type="text" name="first_name" required>
+                            <p>Full Name<span>*</span></p>
+                            <input type="text" name="first_name" required value="<?= htmlspecialchars($firstName) ?>">
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <!-- <div class="col-lg-6">
                         <div class="checkout__input">
                             <p>Last Name<span>*</span></p>
-                            <input type="text" name="last_name" required>
+                            <input type="text" name="last_name" required value="<?= htmlspecialchars($lastName) ?>">
                         </div>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="checkout__input">
                     <p>Email<span>*</span></p>
-                    <input type="email" name="email" required>
+                    <input type="email" name="email" required value="<?= htmlspecialchars($email) ?>">
                 </div>
                 <div class="checkout__input">
                     <p>Phone<span>*</span></p>
-                    <input type="text" name="phone" required>
+                    <input type="text" name="phone" required value="<?= htmlspecialchars($phone) ?>">
                 </div>
                 <div class="checkout__input">
                     <p>Address<span>*</span></p>
-                    <input type="text" name="address" required>
+                    <input type="text" name="address" required value="<?= htmlspecialchars($address) ?>">
                 </div>
                 <div class="checkout__input">
     <p>Venue<span>*</span></p>
     <input type="text" name="venue" required>
 </div>
-
                 <div class="checkout__input">
                     <p>Event Date<span>*</span></p>
                     <input type="date" name="event_date" required>
@@ -128,8 +125,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Special Requests</p>
                     <textarea name="special_requests"></textarea>
                 </div>
-
-                <!-- Order Summary -->
                 <div class="checkout__order">
                     <h4>Your Order</h4>
                     <ul>
@@ -145,8 +140,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </ul>
                     <div class="checkout__order__total">Total <span>₱<?= number_format($totalAmount, 2) ?></span></div>
                     <input type="hidden" name="total_amount" value="<?= $totalAmount ?>">
-
-                    <!-- Payment Methods -->
                     <div class="checkout__input__checkbox">
         <label>
             <input type="radio" name="payment_method" value="Cash" required onclick="toggleGcashUpload(false)"> Cash Payment
@@ -164,8 +157,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     <?php endforeach; ?>
 </div>
-
-<!-- GCash Fields (Reference Number & Receipt Upload) -->
 <div id="gcash_fields" style="display: none;">
     <div class="checkout__input">
         <label>GCash Reference Number<span>*</span></label>
@@ -176,7 +167,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <input type="file" name="gcash_receipt" id="gcash_receipt" accept="image/*">
     </div>
 </div>
-
     <button type="submit" class="site-btn">PLACE ORDER</button>
                 </div>
             </form>
@@ -184,9 +174,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </section>
-    <!-- Checkout Section End -->
-
-    <!-- Js Plugins -->
     <script src="../assets/organi/js/jquery-3.3.1.min.js"></script>
     <script src="../assets/organi/js/bootstrap.min.js"></script>
     <script src="../assets/organi/js/jquery.nice-select.min.js"></script>

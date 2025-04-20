@@ -1,26 +1,19 @@
 <?php
 require_once '../models/Checkout.php';
 require_once '../config/database.php';
-
 class CheckoutController {
     private $checkoutModel;
-
     public function __construct() {
         $this->checkoutModel = new CheckoutModel();
     }
-
     public function processCheckout() {
         session_start();
-
         if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
             $_SESSION['error'] = "You must be logged in to proceed.";
             header("Location: ../public/login.php");
             exit;
         }
-
         $user_id = $_SESSION['user']['id'];
-
-        // Capture form data
         $data = [
             'customer_id'       => $user_id,
             'event_date'        => $_POST['event_date'] ?? '',
@@ -31,42 +24,33 @@ class CheckoutController {
             'total_amount'      => isset($_POST['total_amount']) && is_numeric($_POST['total_amount']) ? $_POST['total_amount'] : null,
             'payment_method'    => $_POST['payment_method'] ?? '',
             'gcash_reference'   => $_POST['gcash_reference'] ?? '',
-            'gcash_receipt'     => null, // Default null, will update if file is uploaded
+            'gcash_receipt'     => null,
         ];
-
-        // ✅ Handle File Upload
         if (isset($_FILES['gcash_receipt']) && $_FILES['gcash_receipt']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = '../uploads/receipts/';
             if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true); // Create directory if not exists
+                mkdir($uploadDir, 0777, true);
             }
 
             $fileTmpPath = $_FILES['gcash_receipt']['tmp_name'];
-            $fileName = time() . '_' . basename($_FILES['gcash_receipt']['name']); // Unique name
-            $filePath = $uploadDir . $fileName;
+            $fileName = time() . '_' . basename($_FILES['gcash_receipt']['name']);
 
             if (move_uploaded_file($fileTmpPath, $filePath)) {
-                $data['gcash_receipt'] = 'uploads/receipts/' . $fileName; // Store relative path
+                $data['gcash_receipt'] = 'uploads/receipts/' . $fileName; 
             } else {
                 $_SESSION['error'] = "Failed to upload receipt.";
                 header("Location: ../public/checkout.php");
                 exit;
             }
         }
-
-        // Validate required fields
         if (empty($data['event_date']) || empty($data['event_time']) || empty($data['guests']) || empty($data['venue'])) {
             $_SESSION['error'] = "Please fill in all required fields.";
             header("Location: ../public/checkout.php");
             exit;
         }
-
         $pdo = Database::getConnection();
-
         try {
             $pdo->beginTransaction();
-
-            // Insert into bookings table
             $stmt = $pdo->prepare("
                 INSERT INTO bookings (customer_id, event_date, event_time, guests, venue, special_requests, total_amount, status_id) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, 1)
@@ -80,10 +64,7 @@ class CheckoutController {
                 $data['special_requests'],
                 $data['total_amount']
             ]);
-
-            $booking_id = $pdo->lastInsertId(); // Get newly created booking ID
-
-            // ✅ Insert ordered items into booking_items
+            $booking_id = $pdo->lastInsertId();
             if (!empty($_SESSION['cart'])) {
                 foreach ($_SESSION['cart'] as $item) {
                     $stmt = $pdo->prepare("
@@ -98,8 +79,6 @@ class CheckoutController {
                     ]);
                 }
             }
-
-            // ✅ Insert payment details
             $stmt = $pdo->prepare("
                 INSERT INTO payments (booking_id, user_id, amount, payment_method_id, gcash_reference, gcash_receipt)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -114,12 +93,9 @@ class CheckoutController {
             ]);
 
             $pdo->commit();
-
-            // ✅ Clear only the session cart (not the booking_items)
             unset($_SESSION['cart']);
-
             $_SESSION['success'] = "Your order has been successfully placed!";
-            header("Location: ../public/checkout.php"); // Redirect to the orders page
+            header("Location: ../public/checkout.php");
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -129,8 +105,6 @@ class CheckoutController {
         }
     }
 }
-
-// Handle Request from Form
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === "processCheckout") {
     $checkoutController = new CheckoutController();
     $checkoutController->processCheckout();

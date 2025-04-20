@@ -1,13 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-
 class Booking {
     private $db;
 
     public function __construct() {
         $this->db = Database::getConnection();
     }
-
     public function getAllBookings() {
         $sql = "SELECT b.*, u.name AS customer_name, bs.status AS booking_status 
                 FROM bookings b

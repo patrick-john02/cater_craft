@@ -1,26 +1,20 @@
 <?php
 class Cart {
     private $pdo;
-
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
-
     public function addItem($booking_id, $menu_item_id, $price, $quantity) {
         $subtotal = $price * $quantity;
-
         $stmt = $this->pdo->prepare("SELECT id FROM bookings WHERE id = ?");
         $stmt->execute([$booking_id]);
         $bookingExists = $stmt->fetch();
-
         if (!$bookingExists) {
             throw new Exception("Error: Booking ID does not exist.");
         }
-
         $stmt = $this->pdo->prepare("SELECT id, quantity FROM booking_items WHERE booking_id = ? AND menu_item_id = ?");
         $stmt->execute([$booking_id, $menu_item_id]);
         $existingItem = $stmt->fetch();
-
         if ($existingItem) {
             $newQuantity = $existingItem['quantity'] + $quantity;
             $newSubtotal = $newQuantity * $price;
@@ -31,7 +25,6 @@ class Cart {
             $stmt->execute([$booking_id, $menu_item_id, $quantity, $subtotal]);
         }
     }
-
     public function getItems($booking_id) {
         $stmt = $this->pdo->prepare("
             SELECT bi.id, mi.name, mi.price, bi.quantity, bi.subtotal, mi.image 
@@ -42,7 +35,6 @@ class Cart {
         $stmt->execute([$booking_id]);
         return $stmt->fetchAll();
     }
-
     public function getTotal($booking_id) {
         $stmt = $this->pdo->prepare("SELECT SUM(subtotal) AS total FROM booking_items WHERE booking_id = ?");
         $stmt->execute([$booking_id]);
@@ -52,6 +44,5 @@ class Cart {
         $stmt = $this->pdo->prepare("DELETE FROM booking_items WHERE id = ?");
         $stmt->execute([$item_id]);
     }
-    
 }
 ?>

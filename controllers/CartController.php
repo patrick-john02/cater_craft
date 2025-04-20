@@ -1,11 +1,9 @@
 <?php
 require_once __DIR__ . '/../models/Cart.php';
 require_once __DIR__ . '/../config/database.php';
-
 class CartController {
     private $cartModel;
     private $pdo;
-
     public function __construct() {
         $this->pdo = Database::getConnection();
         $this->cartModel = new Cart($this->pdo);
@@ -20,7 +18,6 @@ class CartController {
         if (!$menu_item_id || !$price || !$quantity) {
             return ["status" => "error", "message" => "Invalid input."];
         }
-    
         $stmt = $this->pdo->prepare("SELECT id FROM bookings WHERE id = ?");
         $stmt->execute([$booking_id]);
         $bookingExists = $stmt->fetch();
@@ -28,7 +25,6 @@ class CartController {
         if (!$bookingExists) {
             return ["status" => "error", "message" => "Invalid Booking ID."];
         }
-    
         $this->cartModel->addItem($booking_id, $menu_item_id, $price, $quantity);
         return ["status" => "success", "message" => "Item added to cart!"];
     }
@@ -43,6 +39,5 @@ class CartController {
     public function getCartCount($booking_id) {
         return count($this->cartModel->getItems($booking_id));
     }
-    
 }
 ?>
