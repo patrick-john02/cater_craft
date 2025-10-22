@@ -132,7 +132,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <input type="email" id="email" name="email" class="form-control" required>
                         </div>
                         <div class="form-group">
-                            <label for="message">Your Message</label>
+                            <label for="message">Message</label><br>
+                            <label for="message">Rate Us 1-10 for our Services</label>
                             <textarea id="message" name="message" class="form-control" rows="6" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Submit Report</button>

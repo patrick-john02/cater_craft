@@ -38,28 +38,33 @@ $item = $controller->showItemDetails($item_id);
     <link rel="stylesheet" href="../assets/organi/css/owl.carousel.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/style.css" type="text/css">
-    <style>
-        .pro-qty {
-    display: flex;
+<style>
+.pro-qty {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #ddd;
     border-radius: 5px;
     overflow: hidden;
-    max-width: 120px;
 }
 
-.pro-qty .qty-btn {
+.pro-qty .qtybtn {
     background: #f5f5f5;
     border: none;
     padding: 8px 12px;
     cursor: pointer;
     font-size: 18px;
     transition: 0.3s;
+    user-select: none;
+    display: inline-block;
+    width: 35px;
+    height: 40px;
+    line-height: 24px;
 }
 
-.pro-qty .qty-btn:hover {
-    background: #e0e0e0;
+.pro-qty .qtybtn:hover {
+    background: #7fad39;
+    color: white;
 }
 
 .pro-qty input {
@@ -68,9 +73,9 @@ $item = $controller->showItemDetails($item_id);
     text-align: center;
     border: none;
     font-size: 16px;
+    outline: none;
 }
-
-    </style>
+</style>
 </head>
 
 <body>
@@ -121,12 +126,12 @@ $item = $controller->showItemDetails($item_id);
         <input type="hidden" name="price" value="<?= htmlspecialchars($item['price']) ?>">
         <input type="hidden" name="booking_id" value="<?= $_SESSION['booking_id'] ?? 1 ?>">
 
-        <div class="product__details__quantity">
+      <div class="product__details__quantity">
     <div class="quantity">
         <div class="pro-qty">
-            <button type="button" class="qty-btn minus">-</button>
-            <input type="text" name="quantity" id="quantity" value="1" min="1" required>
-            <button type="button" class="qty-btn plus">+</button>
+            <button type="button" class="qty-btn dec qtybtn">-</button>
+            <input type="text" name="quantity" id="quantity" value="1" min="1" readonly>
+            <button type="button" class="qty-btn inc qtybtn">+</button>
         </div>
     </div>
 </div>
@@ -146,16 +151,16 @@ $item = $controller->showItemDetails($item_id);
     <script src="../assets/organi/js/main.js"></script>
 
 
-  <script>
-  $(document).ready(function () {
+<script>
+$(document).ready(function () {
     // Quantity increment and decrement
-    $(".qty-btn").click(function () {
+    $(".qtybtn").click(function () {
         let input = $("#quantity");
         let currentVal = parseInt(input.val());
 
-        if ($(this).hasClass("plus")) {
+        if ($(this).hasClass("inc")) {
             input.val(currentVal + 1);
-        } else if ($(this).hasClass("minus") && currentVal > 1) {
+        } else if ($(this).hasClass("dec") && currentVal > 1) {
             input.val(currentVal - 1);
         }
     });
@@ -177,8 +182,10 @@ $item = $controller->showItemDetails($item_id);
                         position: "topRight"
                     });
 
-                    // 🔹 Update the cart count and total price in navbar
-                    updateCartDetails();
+                    // Update the cart count and total price in navbar
+                    if (typeof updateCartDetails === 'function') {
+                        updateCartDetails();
+                    }
                 } else {
                     iziToast.error({
                         title: "Error",
@@ -197,7 +204,6 @@ $item = $controller->showItemDetails($item_id);
         });
     });
 });
-
 </script>
 
 </body>

@@ -7,6 +7,11 @@ class User {
     public function __construct() {
         $this->pdo = Database::getConnection();
     }
+
+//     public function __construct($pdo) {
+//     $this->pdo = $pdo;
+// }
+
     public function getUserById($id) {
         $stmt = $this->pdo->prepare("SELECT name FROM users WHERE id = ?");
         $stmt->execute([$id]);

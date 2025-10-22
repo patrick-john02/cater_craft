@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/controllers/CartController.php';
 require_once __DIR__ . '/controllers/AuthController.php';
@@ -13,7 +13,70 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_GET['route']) && $_GET['rou
     $authController->login();
     exit();
 }
+
+
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['remove_from_cart'])) {
+        $cartController->removeFromCart($_POST['item_id']);
+        header("Location: http://localhost/cater-craft/public/add_to_cart.php");
+        exit();
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle update cart quantity
+    if (isset($_POST['action']) && $_POST['action'] === 'update_cart_quantity') {
+        $item_id = intval($_POST['item_id'] ?? 0);
+        $booking_id = $_POST['booking_id'] ?? null;
+        $quantity = intval($_POST['quantity'] ?? 1);
+
+        if ($item_id > 0 && $booking_id && $quantity > 0) {
+            try {
+                // Get the menu_item_id and price from menu_items table
+                $stmt = $pdo->prepare("
+                    SELECT mi.price 
+                    FROM booking_items bi
+                    JOIN menu_items mi ON bi.menu_item_id = mi.id
+                    WHERE bi.id = ? AND bi.booking_id = ?
+                ");
+                $stmt->execute([$item_id, $booking_id]);
+                $item = $stmt->fetch();
+                
+                if ($item) {
+                    $price = $item['price'];
+                    $subtotal = $price * $quantity;
+                    
+                    // Update quantity and subtotal
+                    $stmt = $pdo->prepare("UPDATE booking_items SET quantity = ?, subtotal = ? WHERE id = ? AND booking_id = ?");
+                    $result = $stmt->execute([$quantity, $subtotal, $item_id, $booking_id]);
+                    
+                    if ($result) {
+                        header('Content-Type: application/json');
+                        echo json_encode(["status" => "success", "message" => "Cart updated successfully."]);
+                    } else {
+                        header('Content-Type: application/json');
+                        echo json_encode(["status" => "error", "message" => "Failed to update."]);
+                    }
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(["status" => "error", "message" => "Item not found."]);
+                }
+                exit();
+            } catch (PDOException $e) {
+                header('Content-Type: application/json');
+                echo json_encode(["status" => "error", "message" => "Database error: " . $e->getMessage()]);
+                exit();
+            }
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(["status" => "error", "message" => "Invalid parameters."]);
+            exit();
+        }
+    }
+    
+    // Handle remove from cart
     if (isset($_POST['remove_from_cart'])) {
         $cartController->removeFromCart($_POST['item_id']);
         header("Location: http://localhost/cater-craft/public/add_to_cart.php");

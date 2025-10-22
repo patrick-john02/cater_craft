@@ -1,19 +1,38 @@
 <?php
 require_once '../../config/database.php';
 $pdo = Database::getConnection();
+
+// Fetch categories
 $query = "SELECT id, category FROM menu_categories";
 $stmt = $pdo->prepare($query);
 $stmt->execute();
 $categories = $stmt->fetchAll();
+$stmt = $pdo->query("SELECT id, category FROM menu_categories");
+$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Selected category filter (for GET filtering)
 $selectedCategory = isset($_GET['category']) ? $_GET['category'] : '';
+
+// Handle update form POST submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_menu'])) {
     $id = $_POST['id'];
     $name = $_POST['name'];
     $description = $_POST['description'];
     $price = $_POST['price'];
-    $query = "UPDATE menu_items SET name = ?, description = ?, price = ?, updated_at = NOW() WHERE id = ?";
+    $category_id = $_POST['category_id']; // 🟡 This is new and required
+
+    // Validate values (basic)
+    if (empty($id) || empty($name) || empty($price) || empty($category_id)) {
+        header("Location: menu.php?error=1");
+        exit();
+    }
+
+    // Update query now includes category_id
+    $query = "UPDATE menu_items 
+              SET name = ?, description = ?, price = ?, category_id = ?, updated_at = NOW() 
+              WHERE id = ?";
     $stmt = $pdo->prepare($query);
-    if ($stmt->execute([$name, $description, $price, $id])) {
+
+    if ($stmt->execute([$name, $description, $price, $category_id, $id])) {
         header("Location: menu.php?success=2");
         exit();
     } else {
@@ -21,7 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_menu'])) {
         exit();
     }
 }
-$query = "SELECT id, name, description, price, image FROM menu_items WHERE availability = 1";
+
+// Fetch menu items (filtered by category if selected)
+$query = "SELECT id, name, description, price, image, category_id FROM menu_items WHERE availability = 1";
 if (!empty($selectedCategory)) {
     $query .= " AND category_id = ?";
     $stmt = $pdo->prepare($query);
@@ -30,8 +51,10 @@ if (!empty($selectedCategory)) {
     $stmt = $pdo->prepare($query);
     $stmt->execute();
 }
+
 $menuItems = $stmt->fetchAll();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,13 +130,15 @@ $menuItems = $stmt->fetchAll();
                                     <p><strong>₱<?php echo number_format($row['price'], 2); ?></strong></p>
                                     <div class="article-cta">
                                         <a href="#" class="btn btn-primary update-menu-btn" 
-                                           data-toggle="modal" data-target="#updateMenuModal"
-                                           data-id="<?= $row['id']; ?>" 
-                                           data-name="<?= htmlspecialchars($row['name']); ?>" 
-                                           data-price="<?= $row['price']; ?>" 
-                                           data-description="<?= htmlspecialchars($row['description']); ?>">
-                                           Update
-                                        </a>
+                                            data-toggle="modal" data-target="#updateMenuModal"
+                                            data-id="<?= $row['id']; ?>" 
+                                            data-name="<?= htmlspecialchars($row['name']); ?>" 
+                                            data-price="<?= $row['price']; ?>" 
+                                            data-description="<?= htmlspecialchars($row['description']); ?>"
+                                            data-category-id="<?= $row['category_id']; ?>">
+                                            Update
+                                            </a>
+
                                         <button class="btn btn-danger delete-menu-btn" 
                                                 data-id="<?php echo $row['id']; ?>">
                                             Delete
@@ -169,10 +194,12 @@ $(document).ready(function() {
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="addMenuForm" enctype="multipart/form-data">
+            <form id="addMenuForm" method="POST" enctype="multipart/form-data">
+
             <div class="modal-body">
                 <div class="form-group">
                     <label for="menu_name">Menu Name</label>
+                    <input type="hidden" id="update_menu_category_id" name="category_id">
                     <input type="text" class="form-control" id="menu_name" name="menu_name" required>
                 </div>
                 <div class="form-group">
@@ -204,40 +231,38 @@ $(document).ready(function() {
         </form>
 
 <script>
-$(document).ready(function() {
-    $("#addMenuForm").submit(function(event) {
-        event.preventDefault();
-        var formData = new FormData(this);
-        $.ajax({
-            url: "add_menu.php",
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "json",
-            success: function(response) {
-                if (response.status === "success") {
-                    toastr.success(response.message, "Success", {
-                        closeButton: true,
-                        progressBar: true,
-                        timeOut: 3000
-                    });
-                    $("#addPackageModal").modal("hide");
-                    $("#addMenuForm")[0].reset();
+$("#addMenuForm").submit(function(event) {
+    event.preventDefault();
 
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    toastr.error(response.message, "Error");
-                }
-            },
-            error: function() {
-                toastr.error("An error occurred while adding the menu.", "Error");
+    var formData = new FormData(this);
+    console.log("Submitting:", formData); // Debug
+
+    $.ajax({
+        url: "add_menu.php",
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(response) {
+            console.log("Response:", response); // Debug
+
+            if (response.status === "success") {
+                toastr.success(response.message, "Success");
+                $("#addPackageModal").modal("hide");
+                $("#addMenuForm")[0].reset();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                toastr.error(response.message || "Something went wrong.", "Error");
             }
-        });
+        },
+        error: function(xhr) {
+            console.error("AJAX Error:", xhr.responseText);
+            toastr.error("An error occurred while adding the menu.", "Error");
+        }
     });
 });
+
 </script>
         </div>
     </div>
@@ -257,26 +282,26 @@ $(document).ready(function() {
             <form id="updateMenuForm" method="POST" action="update_menu.php" enctype="multipart/form-data">
                 <div class="modal-body p-3">
                     <input type="hidden" id="menu_id" name="id">
+                    <input type="hidden" id="update_menu_category_id" name="category_id">
 
                     <div class="form-group">
                         <label for="update_menu_name" class="font-weight-bold">Menu Name</label>
-                        <input type="text" class="form-control border rounded" id="update_menu_name" name="name" >
+                        <input type="text" class="form-control border rounded" id="update_menu_name" name="name" required>
                     </div>
 
-                    <!-- <div class="form-group">
-    <label for="update_menu_category">Category</label>
-    <select class="form-control" id="update_menu_category" name="menu_category">
-        <option value="">Select Category</option>
-        <?php foreach ($categories as $category): ?>
-            <option value="<?= $category['id']; ?>"><?= htmlspecialchars($category['category']); ?></option>
-        <?php endforeach; ?>
-    </select>
-</div> -->
-
+                    <div class="form-group">
+                        <label for="update_menu_category" class="font-weight-bold">Category</label>
+                        <select class="form-control" id="update_menu_category" name="category_id" required>
+                            <option value="">Select Category</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?= $category['id']; ?>"><?= htmlspecialchars($category['category']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label for="update_menu_price" class="font-weight-bold">Price</label>
-                        <input type="number" class="form-control border rounded" id="update_menu_price" name="price" step="0.01" >
+                        <input type="number" class="form-control border rounded" id="update_menu_price" name="price" step="0.01" required>
                     </div>
 
                     <div class="form-group">
@@ -284,12 +309,12 @@ $(document).ready(function() {
                         <textarea class="form-control border rounded" id="update_menu_description" name="description" rows="3"></textarea>
                     </div>
 
-                    <!-- <div class="form-group">
-                        <label for="update_menu_image" class="font-weight-bold">Upload Image</label>
+                    <div class="form-group">
+                        <label for="update_menu_image" class="font-weight-bold">Upload New Image (Optional)</label>
                         <input type="file" class="form-control-file" id="update_menu_image" name="image" accept="image/*">
-                        <small class="text-muted">Only JPG, JPEG, PNG, GIF formats allowed.</small>
-                    <div id="currentImagePreview"></div>
-                    </div> -->
+                        <small class="text-muted">Only JPG, JPEG, PNG, GIF formats allowed. Leave empty to keep current image.</small>
+                        <div id="currentImagePreview"></div>
+                    </div>
                 </div>
 
                 <div class="modal-footer d-flex justify-content-end">
@@ -297,17 +322,26 @@ $(document).ready(function() {
                     <button type="submit" name="update_menu" class="btn btn-primary">Update Menu</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
+$(document).ready(function() {
     $('.update-menu-btn').on('click', function() {
+        // Set form values
         $('#menu_id').val($(this).data('id'));
         $('#update_menu_name').val($(this).data('name'));
         $('#update_menu_price').val($(this).data('price'));
         $('#update_menu_description').val($(this).data('description'));
+        
+        // Set category in both hidden field and dropdown
+        var categoryId = $(this).data('category-id');
+        $('#update_menu_category_id').val(categoryId);
+        $('#update_menu_category').val(categoryId);
 
-
-
+        // Handle image preview if needed
         let image = $(this).data('image');
         if (image) {
             $('#currentImagePreview').html(`<img src="../../public/uploads/${image}" class="img-fluid mt-2" width="100">`);
@@ -315,20 +349,44 @@ $(document).ready(function() {
             $('#currentImagePreview').html('');
         }
     });
+    
+    // Update hidden field when dropdown changes
+    $('#update_menu_category').on('change', function() {
+        $('#update_menu_category_id').val($(this).val());
+    });
 });
 </script>
 </div>
 </div>
 </div>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <!-- General JS Scripts -->
+  <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/tooltip.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/bootstrap/js/bootstrap.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/moment.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/stisla.js"></script>
+
+  <!-- Optional JS Libraries -->
+  <!-- <script src="../../assets/admin/cater-admin/assets/modules/summernote/summernote-bs4.js"></script> -->
+  <!-- <script src="../../assets/admin/cater-admin/assets/modules/chocolat/dist/js/jquery.chocolat.min.js"></script> -->
+
+  <!-- Template JS File -->
   <script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+  <!-- Bootstrap JS already loaded here -->
+<script src="../../assets/admin/cater-admin/assets/modules/bootstrap/js/bootstrap.min.js"></script>
+
+<!-- ✅ Toastr -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<!-- ✅ Then your scripts -->
+<script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
+<script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
+
+
 </body>
 </html>

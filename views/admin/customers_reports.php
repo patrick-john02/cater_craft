@@ -27,27 +27,29 @@ try {
 <head>
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
-  <title>Cater Categories</title>
+  <title>Cater | Categories</title>
 
   <!-- General CSS Files -->
-  <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/bootstrap/css/bootstrap.min.css">
-
-
-  <!-- CSS Libraries -->
+  <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/fontawesome/css/all.min.css">
 
   <!-- Template CSS -->
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/css/style.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/css/components.css">
-<!-- Start GA -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'UA-94034622-3');
-</script>
+  <!-- Optional CSS Libraries -->
+  <!-- Only include if used -->
+  <!-- <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/summernote/summernote-bs4.css"> -->
+  <!-- <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/jqvmap/dist/jqvmap.min.css"> -->
+
+  <!-- GA -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-94034622-3');
+  </script>
 
     <style>
         body {
@@ -117,12 +119,20 @@ try {
     <?php endif; ?>
 </div>
 
-<script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
+  <!-- General JS Scripts -->
+  <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>
+  <script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/tooltip.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/bootstrap/js/bootstrap.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/modules/moment.min.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/stisla.js"></script>
+
+  <!-- Optional JS Libraries -->
+  <!-- <script src="../../assets/admin/cater-admin/assets/modules/summernote/summernote-bs4.js"></script> -->
+  <!-- <script src="../../assets/admin/cater-admin/assets/modules/chocolat/dist/js/jquery.chocolat.min.js"></script> -->
+
+  <!-- Template JS File -->
   <script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
   <script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
 </body>

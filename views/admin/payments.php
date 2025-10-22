@@ -7,10 +7,11 @@ try {
         throw new Exception("Invalid booking ID.");
     }
     $sql = "SELECT 
-    p.id AS payment_id, b.id AS booking_id, u.name AS customer_name, 
+    p.id AS payment_id, b.id AS booking_id, b.status_id, u.name AS customer_name, 
     u.address, u.email, b.event_date, b.event_time, b.guests, 
     b.venue, b.special_requests, p.amount, p.created_at AS payment_date, 
     pm.method AS payment_method, p.gcash_receipt, b.total_amount
+
 FROM payments p
 JOIN bookings b ON p.booking_id = b.id
 JOIN users u ON b.customer_id = u.id
@@ -145,7 +146,13 @@ WHERE p.booking_id = :booking_id";
                                 </div>
                                 <hr>
                                 <div class="text-md-right">
-                                <button class="btn btn-success" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')">Confirm Payment</button>
+                                <!-- <button class="btn btn-success" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')">Confirm Payment</button> -->
+                              <button class="btn btn-dark"
+        onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')"
+        <?= ($payment['status_id'] == 4 ? 'disabled' : '') ?>>
+    <?= ($payment['status_id'] == 4 ? 'Already Finalized' : 'Confirm Payment') ?>
+</button>
+
 <button class="btn btn-danger" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'rejected')">Reject Payment</button>
                                 <button class="btn btn-warning btn-icon icon-left" onclick="printInvoice()">
     <i class="fas fa-print"></i> Print

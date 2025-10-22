@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../models/User.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 class AuthController {
     public function login() {
         if ($_SERVER["REQUEST_METHOD"] === "POST") {

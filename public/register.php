@@ -1,3 +1,57 @@
+<?php
+require_once '../config/database.php'; // Adjust path as needed
+
+$pdo = Database::getConnection();
+
+$errors = [];
+$success = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve and sanitize POST data
+    $firstName = trim($_POST['first_name'] ?? '');
+    $lastName  = trim($_POST['last_name'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
+    $password  = $_POST['password'] ?? '';
+    $confirm   = $_POST['password_confirm'] ?? '';
+    $phone     = trim($_POST['phone'] ?? '');
+    $address   = trim($_POST['address'] ?? '');
+
+    // Basic validation
+    if (empty($firstName) || empty($lastName) || empty($email) || empty($password) || empty($confirm)) {
+        $errors[] = "Please fill in all required fields.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid email address.";
+    } elseif ($password !== $confirm) {
+        $errors[] = "Passwords do not match.";
+    } else {
+        // Check for existing email
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            $errors[] = "Email already exists.";
+        }
+    }
+
+    if (empty($errors)) {
+        $fullName = $firstName . ' ' . $lastName;
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        $sql = "INSERT INTO users (name, email, password, phone, address, user_type_id, account_status_id)
+                VALUES (?, ?, ?, ?, ?, 1, 1)";
+
+        $stmt = $pdo->prepare($sql);
+
+        try {
+            $stmt->execute([$fullName, $email, $hashedPassword, $phone, $address]);
+            $success = true;
+            header("Location: login.php");
+            exit;
+        } catch (PDOException $e) {
+            $errors[] = "Error registering user: " . $e->getMessage();
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,46 +94,57 @@
               <div class="card-header"><h4>Register</h4></div>
 
               <div class="card-body">
-              <form method="POST" action="landing_page.php">
-            <div class="row">
-                <div class="col-md-6">
-                    <label>First Name</label>
-                    <input type="text" class="form-control" name="first_name" required>
-                </div>
-                <div class="col-md-6">
-                    <label>Last Name</label>
-                    <input type="text" class="form-control" name="last_name" required>
-                </div>
-            </div>
-            <div class="mt-3">
-                <label>Email</label>
-                <input type="email" class="form-control" name="email" required>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <label>Password</label>
-                    <input type="password" class="form-control" name="password" required>
-                </div>
-                <div class="col-md-6">
-                    <label>Confirm Password</label>
-                    <input type="password" class="form-control" name="password_confirm" required>
-                </div>
-            </div>
-            <div class="mt-3">
-                <label>Phone</label>
-                <input type="text" class="form-control" name="phone">
-            </div>
-            <div class="mt-3">
-                <label>Address</label>
-                <input type="text" class="form-control" name="address">
-            </div>
-            <div class="mt-3">
-                <button type="submit" class="btn btn-primary">Register</button>
-            </div>
-        </form>
+                <?php if (!empty($errors)): ?>
+                  <div class="alert alert-danger">
+                      <?php foreach ($errors as $error): ?>
+                          <div><?= htmlspecialchars($error) ?></div>
+                      <?php endforeach; ?>
+                  </div>
+                <?php endif; ?>
+
+                <form method="POST" action="register.php">
+                    <!-- Same form fields -->
+                    <!-- First Name, Last Name, Email, Password, Confirm Password, Phone, Address -->
+                    <!-- ... copy your form fields here ... -->
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>First Name</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Last Name</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label>Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label>Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Confirm Password</label>
+                            <input type="password" class="form-control" name="password_confirm" required>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label>Phone</label>
+                        <input type="text" class="form-control" name="phone">
+                    </div>
+                    <div class="mt-3">
+                        <label>Address</label>
+                        <input type="text" class="form-control" name="address">
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
               </div>
             </div>
-          
           </div>
         </div>
       </div>

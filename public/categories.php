@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../controllers/MenuItemController.php';
+
 $pdo = Database::getConnection();
 $category_id = $_GET['category_id'] ?? 1; 
 $controller = new MenuItemController($pdo);
@@ -8,6 +9,7 @@ $data = $controller->showByCategory($category_id);
 $categories = $data['categories'];
 $menu_items = $data['menu_items'];
 $category_name = $data['category_name'];
+
 ?>
 <!DOCTYPE html>
 <html lang="zxx">
@@ -32,6 +34,8 @@ $category_name = $data['category_name'];
 </head>
 <body>
 <?php include('includes/navbar.php');?>
+
+    <!-- Breadcrumb -->
     <section class="breadcrumb-section set-bg" data-setbg="../assets/organi/img/blog/details/1.jpg">
         <div class="container">
             <div class="row">
@@ -47,77 +51,67 @@ $category_name = $data['category_name'];
             </div>
         </div>
     </section>
+
+    <!-- Product Section -->
     <section class="product spad">
         <div class="container">
             <div class="row">
+                <!-- Sidebar Categories -->
                 <div class="col-lg-3 col-md-5">
                     <div class="sidebar">
+                        <div class="hero__categories">
+                            <ul>
+                                <?php foreach ($categories as $cat): ?>
+                                    <li>
+                                        <a href="categories.php?category_id=<?= $cat['id'] ?>">
+                                            <?= htmlspecialchars($cat['category']) ?>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Menu Items -->
                 <div class="col-lg-9 col-md-7">
                     <div class="product__discount">
-                    <div class="section-title product__discount__title">
-                        <h2>List of <?= htmlspecialchars($category_name) ?></h2> 
-                    </div>
-                      
-                    <!-- <div class="filter__item">
-                        <div class="row">
-                            <div class="col-lg-4 col-md-5">
-                                <div class="filter__sort">
-                                    <span>Sort By</span>
-                                    <select>
-                                        <option value="0">Default</option>
-                                        <option value="0">Default</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-4">
-                                <div class="filter__found">
-                                    <h6><span>16</span> Products found</h6>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-3">
-                                <div class="filter__option">
-                                    <span class="icon_grid-2x2"></span>
-                                    <span class="icon_ul"></span>
-                                </div>
-                            </div>
+                        <div class="section-title product__discount__title">
+                            <h2>List of <?= htmlspecialchars($category_name) ?></h2> 
                         </div>
-                    </div> -->
-                    <div class="row">
-                    <?php foreach ($menu_items as $item): ?>
-    <div class="col-lg-4 col-md-6 col-sm-6">
-        <div class="product__item">
 
-            <div class="product__item__pic set-bg" data-setbg="./uploads/<?= htmlspecialchars($item['image']) ?>">
-                <a href="cater-details.php?id=<?= $item['id'] ?>" class="product__item__link"></a>
-                <ul class="product__item__pic__hover">
-                    <li><a href="#"><i class="fa fa-shopping-cart"></i></a></li>
-                </ul>
-            </div>
-            
-            <div class="product__item__text">
-                        <h6><a href="cater-details.php?id=<?= $item['id'] ?>">
-                            <?= htmlspecialchars($item['name']) ?> <i class="fa fa-arrow-right"></i>
-                        </a></h6>
-                        <h5>₱<?= number_format($item['price'], 2) ?></h5>
+                        <div class="row">
+                            <?php foreach ($menu_items as $item): ?>
+                                <div class="col-lg-4 col-md-6 col-sm-6">
+                                    <div class="product__item">
+                                        <div class="product__item__pic set-bg" 
+                                             data-setbg="./uploads/<?= htmlspecialchars($item['image']) ?>">
+                                            <a href="cater-details.php?id=<?= $item['id'] ?>" class="product__item__link"></a>
+                                            <ul class="product__item__pic__hover">
+                                                <li><a href="cater-details.php?id=<?= $item['id'] ?>"> <i class="fa fa-shopping-cart"></i></a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="product__item__text">
+                                            <h6>
+                                                <!-- <a href="cater-details.php?id=<?= $item['id'] ?>"> -->
+                                                    <a>
+                                                    <?= htmlspecialchars($item['name']) ?> 
+                                                    <!-- <i class="fa fa-arrow-right"></i> -->
+                                                </a>
+                                            </h6>
+                                            <h5>₱<?= number_format($item['price'], 2) ?></h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
+                <!-- End Menu Items -->
             </div>
-        <?php endforeach; ?>
-    </div>
-</div>
-            <!-- <div class="product__pagination">
-                <a href="#">1</a>
-                <a href="#">2</a>
-                <a href="#">3</a>
-                <a href="#"><i class="fa fa-long-arrow-right"></i></a>
-                </div>
-            </div> -->
         </div>
-    </div>
-</div>
-</section>
+    </section>
+
 <?php include('includes/footer.php');?>
 
     <!-- Js Plugins -->

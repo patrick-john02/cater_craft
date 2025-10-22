@@ -70,5 +70,27 @@ class DashboardModel {
         }
         return $totals;
     }
+    public function getRecommendedDishes() {
+    $stmt = $this->pdo->prepare("SELECT * FROM menu_items WHERE is_recommended = 1 LIMIT 5");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
+    public function getMostOrderedDishes() {
+    $stmt = $this->pdo->prepare("
+        SELECT m.*, SUM(bi.quantity) AS total_ordered
+        FROM booking_items bi
+        JOIN menu_items m ON bi.menu_item_id = m.id
+        GROUP BY m.id
+        ORDER BY total_ordered DESC
+        LIMIT 5
+    ");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+}
+
 }
 ?>

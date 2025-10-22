@@ -159,8 +159,9 @@
             </form>
 
             <div class="login-footer">
-                <a href="#">Forgot Password?</a>
-                <span>New to Cater-Craft <a href="register.php">Sign Up</a></span>
+                <a href="forgot-password.php">Forgot Password?</a>
+                <span>New to Cater-Craft <a href="register.php">Sign Up</a></span><br>
+                <span><a href="landing_page.php">Landing Page</a></span>
             </div>
         </div>
     </div>

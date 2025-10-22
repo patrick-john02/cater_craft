@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['user'])) {
+    // Reset guest cart to avoid preloaded cart items
+    unset($_SESSION['cart']);
+}
 require_once __DIR__ . '/../config/database.php'; // Include database connection
 require_once __DIR__ . '/../controllers/MenuCategoryController.php';
 require_once __DIR__ . '/../controllers/UserController.php';

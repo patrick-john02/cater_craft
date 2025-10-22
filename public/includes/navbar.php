@@ -1,17 +1,30 @@
 <?php
-if (session_status() === PHP_SESSION_NONE){session_start();}
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../controllers/UserController.php';
 require_once __DIR__ . '/../../controllers/CartController.php';
-$isAuthenticated = isset($_SESSION['user']);
-$userName = $isAuthenticated ? $_SESSION['user']['name'] : null;
+
 $pdo = Database::getConnection();
 $userController = new UserController($pdo);
 $adminEmail = $userController->getAdminEmail();
-$cartController = new CartController();
-$booking_id = $_SESSION['booking_id'] ?? 1;
-$cartCount = $cartController->getCartCount($booking_id);
+
+$isAuthenticated = isset($_SESSION['user']);
+$userName = $isAuthenticated ? $_SESSION['user']['name'] : null;
+
+$cartCount = 0;
+
+if ($isAuthenticated && !empty($_SESSION['booking_id'])) {
+    $cartController = new CartController();
+    $booking_id = $_SESSION['booking_id'];
+    $cartCount = (int) $cartController->getCartCount($booking_id);
+} else {
+    unset($_SESSION['booking_id'], $_SESSION['cart']);
+}
 ?>
+
 <head>
     <style>
         .dropdown {
@@ -55,7 +68,7 @@ $cartCount = $cartController->getCartCount($booking_id);
     <div class="humberger__menu__overlay"></div>
     <div class="humberger__menu__wrapper">
         <div class="humberger__menu__logo">
-            <a href="#"><img src="../assets/organi/img/logo1.png" alt=""></a>
+            <a href="landing_page.php"><img src="../assets/organi/img/logo1.png" alt=""></a>
         </div>
         <div class="humberger__menu__cart">
             <ul>
@@ -148,9 +161,9 @@ $cartCount = $cartController->getCartCount($booking_id);
                             <li><a href="./services.php">Package</a></li>
                             
                             
-                            <li><a href="./report.php">Report</a></li>
+                            <!-- <li><a href="./report.php">Report</a></li>
                             <li><a href="./aboutus.php">about us</a></li>
-                            <li><a href="./order_history.php"> orders</a></li>
+                            <li><a href="./order_history.php"> orders</a></li> -->
 
                         </ul>
                     </nav>
@@ -159,7 +172,13 @@ $cartCount = $cartController->getCartCount($booking_id);
                     <div class="header__cart">
                         <ul>
                             <li><a href="#"><i class="fa fa-comments"></i></a></li> <!-- Chat Icon -->
-                            <li><a href="add_to_cart.php"><i class="fa fa-shopping-bag"></i> <span id="cart-count"><?= $cartCount ?></span></a></li>
+                            <li>
+  <a href="add_to_cart.php">
+    <i class="fa fa-shopping-bag"></i>
+    <span id="cart-count"><?= htmlspecialchars($cartCount) ?></span>
+  </a>
+</li>
+                            <li><a href="my_orders_booking.php"><i class="fa fa-list-alt"></i></a></li>
                         </ul>
 
                         <!-- <div class="header__cart__price">Total: <span id="cart-total">₱<?= number_format($totalAmount, 2) ?></span></div> -->
@@ -196,44 +215,52 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<!-- realtime count -->
 <script>
 function updateCartCount() {
-    $.ajax({
-        url: "/cater-craft/routes.php?route=cart_count",
-        type: "GET",
-        dataType: "json",
-        success: function (response) {
-            $("#cart-count").text(response.cartCount);
-        },
-        error: function () {
-            console.error("Failed to fetch cart count.");
-        }
-    });
+  $.ajax({
+    url: "/cater-craft/routes.php?route=cart_count",
+    type: "GET",
+    dataType: "json",
+    success: function (response) {
+      if (response && typeof response.cartCount !== "undefined") {
+        $("#cart-count").text(response.cartCount);
+      } else {
+        $("#cart-count").text(0);
+      }
+    },
+    error: function () {
+      console.error("Failed to fetch cart count.");
+      $("#cart-count").text(0);
+    }
+  });
 }
-setInterval(updateCartCount, 2000);
+
+// Update every 3s only if logged in
+<?php if ($isAuthenticated): ?>
+setInterval(updateCartCount, 3000);
+<?php endif; ?>
 
 $(document).on("click", ".add-to-cart", function (event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    let menuItemId = $(this).data("id");
-    let price = $(this).data("price");
+  const menuItemId = $(this).data("id");
+  const price = $(this).data("price");
 
-    $.ajax({
-        url: "routes.php?route=add_to_cart",
-        type: "POST",
-        data: { menu_item_id: menuItemId, price: price, quantity: 1 },
-        dataType: "json",
-        success: function (response) {
-            if (response.status === "success") {
-                updateCartCount();
-            } else {
-                alert(response.message);
-            }
-        },
-        error: function () {
-            console.error("Failed to add item to cart.");
-        }
-    });
+  $.ajax({
+    url: "routes.php?route=add_to_cart",
+    type: "POST",
+    data: { menu_item_id: menuItemId, price: price, quantity: 1 },
+    dataType: "json",
+    success: function (response) {
+      if (response.status === "success") {
+        updateCartCount();
+      } else {
+        alert(response.message);
+      }
+    },
+    error: function () {
+      console.error("Failed to add item to cart.");
+    }
+  });
 });
 </script>

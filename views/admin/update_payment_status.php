@@ -22,10 +22,17 @@ try {
     $stmt = $pdo->prepare("UPDATE payments SET status = :status WHERE id = :payment_id");
     $stmt->execute(['status' => $status, 'payment_id' => $payment_id]);
 
-    if ($status === 'confirmed') {
-        $stmt = $pdo->prepare("UPDATE bookings SET status_id = 2 WHERE id = (SELECT booking_id FROM payments WHERE id = :payment_id)");
-        $stmt->execute(['payment_id' => $payment_id]);
-    }
+if ($status === 'confirmed') {
+    $stmt = $pdo->prepare("UPDATE bookings SET status_id = 2 
+        WHERE id = (SELECT booking_id FROM payments WHERE id = :payment_id)");
+    $stmt->execute(['payment_id' => $payment_id]);
+
+} elseif ($status === 'rejected') {
+    $stmt = $pdo->prepare("UPDATE bookings SET status_id = 4
+        WHERE id = (SELECT booking_id FROM payments WHERE id = :payment_id)");
+    $stmt->execute(['payment_id' => $payment_id]);
+}
+
 
     echo json_encode(["success" => true]);
 } catch (Exception $e) {

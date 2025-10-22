@@ -17,6 +17,12 @@ require_once __DIR__ . '/../../controllers/DashboardController.php';
 $pdo = Database::getConnection();
 $dashboardController = new DashboardController($pdo);
 $stats = $dashboardController->getDashboardStats();
+$stats = $dashboardController->getDashboardStats();
+$dishOverview = $dashboardController->getDishOverview();
+$mostOrdered = $dishOverview['most_ordered'];
+$recommended = $dishOverview['recommended'];
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,8 +55,122 @@ $stats = $dashboardController->getDashboardStats();
 </script>
 <style>
   #salesChart {
-      max-height: 300px; /* 🔹 Prevent excessive stretching */
-      width: 100% !important; /* Ensure full width */
+      max-height: 300px;
+      width: 100% !important;
+  }
+  
+  /* Improved analytics cards styling */
+  .analytics-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .analytics-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .analytics-card h4 {
+    color: white;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+  
+  .dish-item {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .dish-item:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.02);
+  }
+  
+  .dish-name {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+  
+  .dish-orders {
+    opacity: 0.9;
+    font-size: 14px;
+  }
+  
+  .orders-badge {
+    background: rgba(255,255,255,0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    float: right;
+    margin-top: -5px;
+  }
+  
+  /* Revenue analytics card */
+  .revenue-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+  
+  /* Popular times card */
+  .times-card {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+  
+  /* Customer insights card */
+  .customer-card {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  
+  .stat-label {
+    opacity: 0.9;
+    font-size: 14px;
+  }
+  
+  .mini-stat {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .time-slot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .time-slot:last-child {
+    border-bottom: none;
+  }
+  
+  .progress-bar-custom {
+    height: 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 3px;
+    transition: width 0.3s ease;
   }
 </style>
 <!-- /END GA --></head>
@@ -76,7 +196,7 @@ $stats = $dashboardController->getDashboardStats();
                 <div class="card-header">
                     <h4>Total Customers</h4>
                 </div>
-                <div class="card-body"><?= $stats['total_customers']; ?></div>
+                <div class="card-body"><?= htmlspecialchars($stats['total_customers']); ?></div>
                 </div>
               </div>
             </div>
@@ -89,7 +209,7 @@ $stats = $dashboardController->getDashboardStats();
                 <div class="card-header">
                     <h4>Total Bookings</h4>
                 </div>
-                <div class="card-body"><?= $stats['total_bookings']; ?></div>
+                <div class="card-body"><?= htmlspecialchars($stats['total_bookings']); ?></div>
                 </div>
               </div>
             </div>
@@ -102,7 +222,7 @@ $stats = $dashboardController->getDashboardStats();
                 <div class="card-header">
                     <h4>Pending Bookings</h4>
                 </div>
-                <div class="card-body"><?= $stats['pending_bookings']; ?></div>
+                <div class="card-body"><?= htmlspecialchars($stats['pending_bookings']); ?></div>
                 </div>
               </div>
             </div>
@@ -115,7 +235,7 @@ $stats = $dashboardController->getDashboardStats();
                 <div class="card-header">
                     <h4>Completed Bookings</h4>
                 </div>
-                <div class="card-body"><?= $stats['completed_bookings']; ?></div>
+                <div class="card-body"><?= htmlspecialchars($stats['completed_bookings']); ?></div>
                 </div>
               </div>
             </div>            
@@ -132,41 +252,182 @@ $stats = $dashboardController->getDashboardStats();
                 <div class="card-body">
                 <canvas id="salesChart" height="182"></canvas>
                   <div class="statistic-details mt-sm-4">
-    <div class="statistic-details-item">
-        <span class="text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 7%</span>
-        <div class="detail-value" id="todaySales">₱0</div>
-        <div class="detail-name">Today's Sales</div>
-    </div>
-    <div class="statistic-details-item">
-        <span class="text-muted"><span class="text-danger"><i class="fas fa-caret-down"></i></span> 23%</span>
-        <div class="detail-value" id="weekSales">₱0</div>
-        <div class="detail-name">This Week's Sales</div>
-    </div>
-    <div class="statistic-details-item">
-        <span class="text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span>9%</span>
-        <div class="detail-value" id="monthSales">₱0</div>
-        <div class="detail-name">This Month's Sales</div>
-    </div>
-    <div class="statistic-details-item">
-        <span class="text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 19%</span>
-        <div class="detail-value" id="yearSales">₱0</div>
-        <div class="detail-name">This Year's Sales</div>
-    </div>
-</div>
+                    <div class="statistic-details-item">
+                        <span class="text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 7%</span>
+                        <div class="detail-value" id="todaySales">₱0</div>
+                        <div class="detail-name">Today's Sales</div>
+                    </div>
+                    <div class="statistic-details-item">
+                        <span class="text-muted"><span class="text-danger"><i class="fas fa-caret-down"></i></span> 23%</span>
+                        <div class="detail-value" id="weekSales">₱0</div>
+                        <div class="detail-name">This Week's Sales</div>
+                    </div>
+                    <div class="statistic-details-item">
+                        <span class="text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span>9%</span>
+                        <div class="detail-value" id="monthSales">₱0</div>
+                        <div class="detail-name">This Month's Sales</div>
+                    </div>
+                    <div class="statistic-details-item">
+                        <span class="text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 19%</span>
+                        <div class="detail-value" id="yearSales">₱0</div>
+                        <div class="detail-name">This Year's Sales</div>
+                    </div>
+                  </div>
 
+                 <div class="row mt-4">
+                <div class="col-lg-6 col-md-12 col-12">
+                  <div class="analytics-card">
+                    <h4><i class="fas fa-trophy"></i> Most Ordered Dishes</h4>
+                    <div class="dishes-container">
+                      <?php if (!empty($dishOverview['most_ordered'])): ?>
+                        <?php foreach ($dishOverview['most_ordered'] as $index => $dish): ?>
+                          <div class="dish-item">
+                            <div class="dish-name">
+                              <i class="fas fa-medal" style="color: <?= $index == 0 ? '#FFD700' : ($index == 1 ? '#C0C0C0' : '#CD7F32') ?>"></i>
+                              <?= htmlspecialchars($dish['name']) ?>
+                              <span class="orders-badge"><?= htmlspecialchars($dish['total_ordered']) ?> orders</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                              <div class="progress-fill" style="width: <?= ($dish['total_ordered'] / $dishOverview['most_ordered'][0]['total_ordered']) * 100 ?>%"></div>
+                            </div>
+                          </div>
+                        <?php endforeach; ?>
+                      <?php else: ?>
+                        <div class="dish-item">
+                          <div class="dish-name">No orders found yet</div>
+                          <div class="dish-orders">Start taking orders to see analytics!</div>
+                        </div>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-6 col-md-12 col-12">
+                  <div class="analytics-card revenue-card">
+                    <h4><i class="fas fa-chart-line"></i> Dish Revenue Analytics</h4>
+                    <div class="mini-stat">
+                      <div class="stat-number" id="topDishRevenue">₱0</div>
+                      <div class="stat-label">Top Dish Revenue</div>
+                    </div>
+                    <div class="dish-revenue-list" id="dishRevenueList">
+                      <!-- This will be populated by JavaScript -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-lg-4 col-md-12 col-12">
+                  <div class="analytics-card times-card">
+                    <h4><i class="fas fa-clock"></i> Popular Booking Times</h4>
+                    <div id="popularTimes">
+                      <!-- Populated by JavaScript -->
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-12 col-12">
+                  <div class="analytics-card customer-card">
+                    <h4><i class="fas fa-users"></i> Customer Insights</h4>
+                    <div class="mini-stat">
+                      <div class="stat-number" id="avgOrderValue">₱0</div>
+                      <div class="stat-label">Avg Order Value</div>
+                    </div>
+                    <div class="mini-stat">
+                      <div class="stat-number" id="repeatCustomers">0%</div>
+                      <div class="stat-label">Repeat Customers</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-12 col-12">
+                  <div class="analytics-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <h4><i class="fas fa-calendar-alt"></i> Booking Trends</h4>
+                    <div class="mini-stat">
+                      <div class="stat-number" id="avgGuestsPerBooking">0</div>
+                      <div class="stat-label">Avg Guests per Booking</div>
+                    </div>
+                    <div class="mini-stat">
+                      <div class="stat-number" id="peakBookingDay">-</div>
+                      <div class="stat-label">Peak Booking Day</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+      <script>
+
+      document.addEventListener("DOMContentLoaded", function () {
+          fetchAnalyticsData();
+      });
+
+      function fetchAnalyticsData() {
+
+          fetch('../../controllers/DashboardController.php?dishAnalytics=true')
+              .then(response => response.json())
+              .then(data => {
+                  if (data.topDishRevenue) {
+                      document.getElementById("topDishRevenue").innerText = "₱" + data.topDishRevenue;
+                  }
+                  
+
+                  if (data.dishRevenue && data.dishRevenue.length > 0) {
+                      let revenueHtml = '';
+                      data.dishRevenue.slice(0, 3).forEach(dish => {
+                          revenueHtml += `
+                              <div class="time-slot">
+                                  <span>${dish.name}</span>
+                                  <span>₱${dish.revenue}</span>
+                              </div>
+                          `;
+                      });
+                      document.getElementById("dishRevenueList").innerHTML = revenueHtml;
+                  }
+              })
+              .catch(error => console.error("Error loading dish analytics:", error));
+
+
+          fetch('../../controllers/DashboardController.php?bookingAnalytics=true')
+              .then(response => response.json())
+              .then(data => {
+                  // Update popular times
+                  if (data.popularTimes && data.popularTimes.length > 0) {
+                      let timesHtml = '';
+                      data.popularTimes.forEach(time => {
+                          timesHtml += `
+                              <div class="time-slot">
+                                  <span>${time.time_slot}</span>
+                                  <span>${time.booking_count} bookings</span>
+                              </div>
+                          `;
+                      });
+                      document.getElementById("popularTimes").innerHTML = timesHtml;
+                  }
+                  
+
+                  if (data.avgOrderValue) {
+                      document.getElementById("avgOrderValue").innerText = "₱" + data.avgOrderValue;
+                  }
+                  if (data.repeatCustomers) {
+                      document.getElementById("repeatCustomers").innerText = data.repeatCustomers + "%";
+                  }
+                  
+
+                  if (data.avgGuestsPerBooking) {
+                      document.getElementById("avgGuestsPerBooking").innerText = data.avgGuestsPerBooking;
+                  }
+                  if (data.peakBookingDay) {
+                      document.getElementById("peakBookingDay").innerText = data.peakBookingDay;
+                  }
+              })
+              .catch(error => console.error("Error loading booking analytics:", error));
+      }
+      </script>
                 </div>
               </div>
             </div>
-           
           </div>
-          
-                
-              
-
-             
-            
           </div>
-          
         </section>
       </div>
     </div>
@@ -205,16 +466,14 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch('../../controllers/DashboardController.php?salesData=true')
             .then(response => response.json())
             .then(data => {
-                // ✅ Update sales statistics
+
                 document.getElementById("todaySales").innerText = "₱" + data.today;
                 document.getElementById("weekSales").innerText = "₱" + data.week;
                 document.getElementById("monthSales").innerText = "₱" + data.month;
                 document.getElementById("yearSales").innerText = "₱" + data.year;
 
-                // ✅ Render Chart
                 const ctx = document.getElementById("salesChart").getContext("2d");
 
-                // 🔹 Destroy existing chart before creating a new one
                 if (salesChart !== null) {
                     salesChart.destroy();
                 }
@@ -247,8 +506,6 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => console.error("Error loading sales data:", error));
     }
-
-    // ✅ Call the function once when the page loads
     fetchSalesData();
 });
 
