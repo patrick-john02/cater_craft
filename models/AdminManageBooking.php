@@ -158,10 +158,19 @@ class ManageBooking {
     }
 
     // 6. Update status
-    public function updateBookingStatus($bookingId, $statusId) {
+    public function updateBookingStatus($bookingId, $status) {
         try {
-            $stmt = $this->pdo->prepare("UPDATE bookings SET status_id = ? WHERE id = ?");
-            return $stmt->execute([$statusId, $bookingId]);
+            // Get status_id from status name
+            $stmt = $this->pdo->prepare("SELECT id FROM booking_statuses WHERE LOWER(status) = LOWER(?)");
+            $stmt->execute([$status]);
+            $statusData = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($statusData) {
+                $statusId = $statusData['id'];
+                $stmt = $this->pdo->prepare("UPDATE bookings SET status_id = ? WHERE id = ?");
+                return $stmt->execute([$statusId, $bookingId]);
+            }
+            return false;
         } catch (PDOException $e) {
             error_log("Error updating booking status: " . $e->getMessage());
             return false;

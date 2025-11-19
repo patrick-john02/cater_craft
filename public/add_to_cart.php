@@ -189,7 +189,7 @@ $totalAmount = $cartController->fetchCartTotal($booking_id);
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="shoping__cart__btns">
-                            <a href="menu.php" class="primary-btn cart-btn">CONTINUE SHOPPING</a>
+                            <a href="landing_page.php" class="primary-btn cart-btn">CONTINUE SHOPPING</a>
                             <a href="#" class="primary-btn cart-btn cart-btn-right" onclick="updateCart()">
                                 <span class="icon_loading"></span> UPDATE CART
                             </a>

@@ -192,10 +192,6 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                             </div>
                             
-                            <div class="checkout__input">
-                                <p>Number of Guests<span>*</span></p>
-                                <input type="number" name="guests" required min="1" placeholder="Enter number of guests">
-                            </div>
                             
                             <div class="checkout__input">
                                 <p>Special Requests</p>
@@ -224,24 +220,25 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <input type="hidden" name="total_amount" value="<?= $totalAmount ?>">
                             
                             <!-- Payment Methods -->
-                            <div class="checkout__input">
-                                <p>Payment Method<span>*</span></p>
-                                <?php foreach ($payment_methods as $index => $method): ?>
-                                    <div class="checkout__input__checkbox">
-                                        <label for="payment_<?= $method['id'] ?>">
-                                            <input type="radio" 
-                                                   id="payment_<?= $method['id'] ?>"
-                                                   name="payment_method" 
-                                                   value="<?= $method['id'] ?>" 
-                                                   <?= $index === 0 ? 'required' : '' ?> 
-                                                   onchange="togglePaymentFields('<?= strtolower($method['method']) ?>')">
-                                            <?= ucfirst(htmlspecialchars($method['method'])) ?>
-                                            <?php if (isset($method['description'])): ?>
-                                                <small class="text-muted d-block"><?= htmlspecialchars($method['description']) ?></small>
-                                            <?php endif; ?>
-                                        </label>
-                                    </div>
-                                <?php endforeach; ?>
+<div class="checkout__input">
+    <p>Payment Method<span>*</span></p>
+    <select name="payment_method" id="payment_method" class="form-control" required>
+        <option value="" disabled selected>Select a payment method</option>
+        <?php foreach ($payment_methods as $method): ?>
+            <option
+                value="<?= $method['id'] ?>"
+                data-method="<?= strtolower($method['method']) ?>"
+                title="<?= isset($method['description']) ? htmlspecialchars($method['description']) : '' ?>"
+            >
+                <?= ucfirst(htmlspecialchars($method['method'])) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <?php if (!empty($payment_methods)): ?>
+        <small class="text-muted d-block mt-1">
+            Choose how you would like to pay (e.g., GCash, Cash on Delivery, etc.).
+        </small>
+    <?php endif; ?>
                             </div>
                             
                             <!-- GCash Payment Fields -->
@@ -277,75 +274,68 @@ $payment_methods = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="../assets/organi/js/owl.carousel.min.js"></script>
     <script src="../assets/organi/js/main.js"></script>
     
-    <script>
-        function togglePaymentFields(method) {
-            const gcashFields = document.getElementById('gcash_fields');
-            const gcashRef = document.getElementById('gcash_reference');
-            const gcashReceipt = document.getElementById('gcash_receipt');
+<script>
+// Handle payment method dropdown change
+document.getElementById('payment_method').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const method = selectedOption.getAttribute('data-method') || '';
+    togglePaymentFields(method);
+});
 
-            if (method === 'gcash') {
-                gcashFields.style.display = 'block';
-                gcashRef.setAttribute('required', 'required');
-                gcashReceipt.setAttribute('required', 'required');
-            } else {
-                gcashFields.style.display = 'none';
-                gcashRef.removeAttribute('required');
-                gcashReceipt.removeAttribute('required');
-                gcashRef.value = '';
-                gcashReceipt.value = '';
-            }
+function togglePaymentFields(method) {
+    const gcashFields = document.getElementById('gcash_fields');
+    const gcashRef = document.getElementById('gcash_reference');
+    const gcashReceipt = document.getElementById('gcash_receipt');
+
+    if (method === 'gcash') {
+        gcashFields.style.display = 'block';
+        gcashRef.setAttribute('required', 'required');
+        gcashReceipt.setAttribute('required', 'required');
+    } else {
+        gcashFields.style.display = 'none';
+        gcashRef.removeAttribute('required');
+        gcashReceipt.removeAttribute('required');
+        gcashRef.value = '';
+        gcashReceipt.value = '';
+    }
+}
+
+// Form submission validation
+document.getElementById('checkout-form').addEventListener('submit', function (e) {
+    const submitBtn = document.getElementById('submit-btn');
+    const paymentMethod = document.getElementById('payment_method');
+    const selectedPayment = paymentMethod.value;
+
+    // Check if payment method is selected
+    if (!selectedPayment || selectedPayment === '') {
+        e.preventDefault();
+        alert('Please select a payment method.');
+        paymentMethod.focus();
+        return;
+    }
+
+    // Disable submit button to prevent double submission
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+
+    // Re-enable after 5 seconds as fallback
+    setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'PLACE ORDER';
+    }, 5000);
+});
+
+// File upload validation
+document.getElementById('gcash_receipt').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            alert('File size must be less than 5MB');
+            this.value = '';
         }
-        
-        // Form validation
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('submit-btn');
-            const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
-            const termsCheckbox = document.getElementById('terms');
-            
-            if (!selectedPayment) {
-                e.preventDefault();
-                alert('Please select a payment method.');
-                return;
-            }
-            
-            if (!termsCheckbox.checked) {
-                e.preventDefault();
-                alert('Please agree to the Terms and Conditions.');
-                termsCheckbox.focus();
-                return;
-            }
-            
-            // Disable submit button to prevent double submission
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Processing...';
-            
-            // Re-enable button after 5 seconds in case of error
-            setTimeout(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'PLACE ORDER';
-            }, 5000);
-        });
-        
-        // File upload validation
-        document.getElementById('gcash_receipt').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const maxSize = 5 * 1024 * 1024; // 5MB
-                if (file.size > maxSize) {
-                    alert('File size must be less than 5MB');
-                    this.value = '';
-                }
-            }
-        });
-        
-        // Initialize payment method display
-        document.addEventListener('DOMContentLoaded', function() {
-            const firstPaymentMethod = document.querySelector('input[name="payment_method"]');
-            if (firstPaymentMethod) {
-                firstPaymentMethod.checked = true;
-                togglePaymentFields(firstPaymentMethod.getAttribute('onchange').match(/'(.*)'/)[1]);
-            }
-        });
-    </script>
+    }
+});
+</script>
 </body>
 </html>

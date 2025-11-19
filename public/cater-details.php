@@ -39,7 +39,7 @@ $item = $controller->showItemDetails($item_id);
     <link rel="stylesheet" href="../assets/organi/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="../assets/organi/css/style.css" type="text/css">
 <style>
-.pro-qty {
+.pro-qty-custom {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -48,7 +48,7 @@ $item = $controller->showItemDetails($item_id);
     overflow: hidden;
 }
 
-.pro-qty .qtybtn {
+.pro-qty-custom .qtybtn {
     background: #f5f5f5;
     border: none;
     padding: 8px 12px;
@@ -62,12 +62,12 @@ $item = $controller->showItemDetails($item_id);
     line-height: 24px;
 }
 
-.pro-qty .qtybtn:hover {
+.pro-qty-custom .qtybtn:hover {
     background: #7fad39;
     color: white;
 }
 
-.pro-qty input {
+.pro-qty-custom input {
     width: 50px;
     height: 40px;
     text-align: center;
@@ -126,17 +126,15 @@ $item = $controller->showItemDetails($item_id);
         <input type="hidden" name="price" value="<?= htmlspecialchars($item['price']) ?>">
         <input type="hidden" name="booking_id" value="<?= $_SESSION['booking_id'] ?? 1 ?>">
 
-      <div class="product__details__quantity">
+<div class="product__details__quantity">
     <div class="quantity">
-        <div class="pro-qty">
+        <div class="pro-qty-custom">
             <button type="button" class="qty-btn dec qtybtn">-</button>
             <input type="text" name="quantity" id="quantity" value="1" min="1" readonly>
             <button type="button" class="qty-btn inc qtybtn">+</button>
         </div>
     </div>
 </div>
-
-    </div>
         <button type="submit" class="primary-btn">ADD TO CART</button>
     </form>
 <?php endif; ?>
@@ -153,8 +151,14 @@ $item = $controller->showItemDetails($item_id);
 
 <script>
 $(document).ready(function () {
+    // Remove any existing quantity handlers from main.js
+    $(".qtybtn").off('click');
+    
     // Quantity increment and decrement
-    $(".qtybtn").click(function () {
+    $(".qtybtn").on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         let input = $("#quantity");
         let currentVal = parseInt(input.val());
 

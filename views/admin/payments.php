@@ -44,15 +44,48 @@ WHERE p.booking_id = :booking_id";
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/modules/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/css/style.css">
   <link rel="stylesheet" href="../../assets/admin/cater-admin/assets/css/components.css">
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-94034622-3');
-</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-94034622-3');
+  </script>
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      /* Hide navbar and sidebar */
+      .navbar,
+      .main-sidebar,
+      .sidebar-wrapper,
+      aside {
+        display: none !important;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+      }
+      .main-wrapper, .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+      .main-wrapper-1 {
+        padding-left: 0 !important;
+      }
+      .invoice {
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .section {
+        padding: 0 !important;
+      }
+    }
+  </style>
 </head>
+
 <body>
     <div id="app">
         <div class="main-wrapper main-wrapper-1">
@@ -61,7 +94,7 @@ WHERE p.booking_id = :booking_id";
 
             <div class="main-content">
                 <section class="section">
-                    <div class="section-header">
+                    <div class="section-header no-print">
                         <h1>Invoice</h1>
                         <div class="section-header-breadcrumb">
                             <div class="breadcrumb-item active"><a href="#">Dashboard</a></div>
@@ -121,9 +154,9 @@ WHERE p.booking_id = :booking_id";
                                                     <tr>
                                                         <td><?= $count++; ?></td>
                                                         <td><?= htmlspecialchars($item['item_name']); ?></td>
-                                                        <td class="text-center">$<?= number_format($item['price'], 2); ?></td>
+                                                        <td class="text-center">₱<?= number_format($item['price'], 2); ?></td>
                                                         <td class="text-center"><?= $item['quantity']; ?></td>
-                                                        <td class="text-right">$<?= number_format($item['subtotal'], 2); ?></td>
+                                                        <td class="text-right">₱<?= number_format($item['subtotal'], 2); ?></td>
                                                     </tr>
                                                 <?php } ?>
                                             </table>
@@ -145,81 +178,91 @@ WHERE p.booking_id = :booking_id";
                                     </div>
                                 </div>
                                 <hr>
-                                <div class="text-md-right">
-                                <!-- <button class="btn btn-success" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')">Confirm Payment</button> -->
-                              <button class="btn btn-dark"
-        onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')"
-        <?= ($payment['status_id'] == 4 ? 'disabled' : '') ?>>
-    <?= ($payment['status_id'] == 4 ? 'Already Finalized' : 'Confirm Payment') ?>
-</button>
-
-<button class="btn btn-danger" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'rejected')">Reject Payment</button>
-                                <button class="btn btn-warning btn-icon icon-left" onclick="printInvoice()">
-    <i class="fas fa-print"></i> Print
-</button><button class="btn btn-secondary btn-icon icon-left" onclick="goBack()">
-        <i class="fas fa-arrow-left"></i> Back
-    </button>
+                                <div class="text-md-right no-print">
+                                    <?php
+                                    // Get current booking status
+                                    $isPending = ($payment['status_id'] == 1); // 1=Pending
+                                    $isConfirmed = ($payment['status_id'] == 2); // 2=Confirmed
+                                    $isCancelled = ($payment['status_id'] == 3); // 3=Cancelled
+                                    $isFinalized = ($isConfirmed || $isCancelled);
+                                    ?>
+                                    
+                                    <?php if ($isPending): ?>
+                                        <button class="btn btn-success" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'confirmed')">
+                                            <i class="fas fa-check"></i> Confirm Payment
+                                        </button>
+                                        <button class="btn btn-danger" onclick="updatePaymentStatus(<?= $payment['payment_id']; ?>, 'rejected')">
+                                            <i class="fas fa-times"></i> Reject Payment
+                                        </button>
+                                    <?php else: ?>
+                                        <div class="alert <?= $isConfirmed ? 'alert-success' : 'alert-danger' ?> d-inline-block mb-3">
+                                            <i class="fas fa-<?= $isConfirmed ? 'check-circle' : 'times-circle' ?>"></i> 
+                                            Payment has been <?= $isConfirmed ? 'confirmed' : 'cancelled' ?>. No further actions available.
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <button class="btn btn-warning btn-icon icon-left" onclick="printInvoice()">
+                                        <i class="fas fa-print"></i> Print
+                                    </button>
+                                    <button class="btn btn-secondary btn-icon icon-left" onclick="goBack()">
+                                        <i class="fas fa-arrow-left"></i> Back
+                                    </button>
                                 </div>
-                                </div>
-        </section>
-      </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </div>
-  </div>
-  <script>
-    function goBack() {
-        window.history.back();
-    }
-</script>
-<script>
-    function goBack() {
-        window.history.back();
-    }
-    function printInvoice() {
-        let invoiceContent = document.getElementById('invoice').innerHTML;
-        let originalContent = document.body.innerHTML;
-        document.body.innerHTML = invoiceContent;
-        window.print();
-        document.body.innerHTML = originalContent;
-        location.reload();
-    }
 
-    function updatePaymentStatus(paymentId, status) {
-    if (!confirm(`Are you sure you want to ${status} this payment?`)) {
-        return;
-    }
-    fetch('update_payment_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            payment_id: paymentId,
-            status: status
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Payment status updated successfully!');
-            location.reload();
-        } else {
-            alert('Error updating payment status: ' + data.message);
+    <script>
+        function goBack() {
+            window.history.back();
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating payment status.');
-    });
-}
-</script>
-  <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/modules/tooltip.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/modules/bootstrap/js/bootstrap.min.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/modules/moment.min.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/js/stisla.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
-  <script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
+
+        function printInvoice() {
+            window.print();
+        }
+
+        function updatePaymentStatus(paymentId, status) {
+            if (!confirm(`Are you sure you want to ${status} this payment?`)) {
+                return;
+            }
+            fetch('update_payment_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    payment_id: paymentId,
+                    status: status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Payment status updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error updating payment status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating payment status.');
+            });
+        }
+    </script>
+
+    <script src="../../assets/admin/cater-admin/assets/modules/jquery.min.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/modules/popper.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/modules/tooltip.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/modules/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/modules/moment.min.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/js/stisla.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/js/scripts.js"></script>
+    <script src="../../assets/admin/cater-admin/assets/js/custom.js"></script>
 </body>
 </html>

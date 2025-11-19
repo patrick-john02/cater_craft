@@ -150,7 +150,7 @@ if ($isAuthenticated && !empty($_SESSION['booking_id'])) {
             <div class="row">
                 <div class="col-lg-3">
                     <div class="header__logo">
-                        <a href="./index.html"><img src="../assets/organi/img/logo1.png" alt=""></a>
+                        <a href="landing_page.php"><img src="../assets/organi/img/logo1.png" alt=""></a>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -168,21 +168,25 @@ if ($isAuthenticated && !empty($_SESSION['booking_id'])) {
                         </ul>
                     </nav>
                 </div>
-                <div class="col-lg-3">
-                    <div class="header__cart">
-                        <ul>
-                            <li><a href="#"><i class="fa fa-comments"></i></a></li> <!-- Chat Icon -->
-                            <li>
-  <a href="add_to_cart.php">
-    <i class="fa fa-shopping-bag"></i>
-    <span id="cart-count"><?= htmlspecialchars($cartCount) ?></span>
-  </a>
-</li>
-                            <li><a href="my_orders_booking.php"><i class="fa fa-list-alt"></i></a></li>
-                        </ul>
+<div class="col-lg-3">
+    <div class="header__cart">
+        <ul>
+            <li><a href="#"><i class="fa fa-comments"></i></a></li> <!-- Chat Icon -->
+            <?php if ($isAuthenticated): ?>
+                <li>
+                <a href="add_to_cart.php">
+                    <i class="fa fa-shopping-bag"></i>
+                    <span id="cart-count"><?= htmlspecialchars($cartCount) ?></span>
+                </a>
+                </li>
+            <?php endif; ?>
+            <?php if ($isAuthenticated): ?>
+            <li><a href="my_orders_booking.php"><i class="fa fa-list-alt"></i></a></li>
+            <?php endif; ?>
+        </ul>
 
-                        <!-- <div class="header__cart__price">Total: <span id="cart-total">₱<?= number_format($totalAmount, 2) ?></span></div> -->
-                </div>
+        <!-- <div class="header__cart__price">Total: <span id="cart-total">₱<?= number_format($totalAmount, 2) ?></span></div> -->
+</div>
             </div>
         </div>
             <div class="humberger__open">

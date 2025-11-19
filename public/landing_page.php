@@ -93,7 +93,7 @@ $adminphonenumber = $usercontroller->getPhoneNumber();
                         <span>PREMIUM CATERING</span>
                         <h2>Delicious <br>Menus for Every Occasion</h2>
                         <p>Quality Catering Service for Any Event</p>
-                        <a href="#" class="primary-btn">EXPLORE PACKAGES</a>
+                        <a href="landing_page.php" class="primary-btn">EXPLORE PACKAGES</a>
                     </div>
                 </div>
             </div>

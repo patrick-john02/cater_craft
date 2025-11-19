@@ -57,8 +57,8 @@ class CheckoutController {
     }
 
     private function validateAndSanitizeInput($postData) {
-        // Required fields
-        $required = ['booking_id', 'venue', 'event_date', 'event_time', 'guests', 'total_amount', 'payment_method'];
+        // Required fields (removed 'guests')
+        $required = ['booking_id', 'venue', 'event_date', 'event_time', 'total_amount', 'payment_method'];
         
         foreach ($required as $field) {
             if (empty($postData[$field])) {
@@ -69,27 +69,18 @@ class CheckoutController {
             }
         }
 
-        // Validate and sanitize data
+        // Validate and sanitize data (removed guests field)
         $data = [
             'booking_id' => trim($postData['booking_id']),
             'customer_id' => $_SESSION['user']['id'],
             'venue' => trim($postData['venue']),
             'event_date' => $postData['event_date'],
             'event_time' => $postData['event_time'],
-            'guests' => (int)$postData['guests'],
             'special_requests' => trim($postData['special_requests'] ?? ''),
             'total_amount' => (float)$postData['total_amount'],
             'payment_method' => (int)$postData['payment_method'],
             'gcash_reference' => trim($postData['gcash_reference'] ?? ''),
         ];
-
-        // Additional validation
-        if ($data['guests'] <= 0) {
-            $_SESSION['error'] = "Number of guests must be greater than 0.";
-            header("Location: ../public/checkout.php");
-            exit;
-            return false;
-        }
 
         if ($data['total_amount'] <= 0) {
             $_SESSION['error'] = "Invalid total amount.";
@@ -220,12 +211,12 @@ class CheckoutController {
             // Debug: Log cart items structure
             error_log("Cart Items: " . print_r($cartItems, true));
 
-            // Insert booking
+            // Insert booking (removed guests field)
             $stmt = $this->pdo->prepare("
                 INSERT INTO bookings (
-                    customer_id, event_date, event_time, venue, guests, 
+                    customer_id, event_date, event_time, venue, 
                     special_requests, total_amount, status_id, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, 1, NOW())
             ");
             
             $success = $stmt->execute([
@@ -233,7 +224,6 @@ class CheckoutController {
                 $data['event_date'],
                 $data['event_time'],
                 $data['venue'],
-                $data['guests'],
                 $data['special_requests'],
                 $data['total_amount']
             ]);
@@ -252,7 +242,6 @@ class CheckoutController {
             $this->insertBookingItems($final_booking_id, $cartItems);
 
             // Insert payment record
-            // Note: payment_status_id = 1 (assuming 1 = pending), status = 'pending'
             $stmt = $this->pdo->prepare("
                 INSERT INTO payments (
                     booking_id, user_id, amount, payment_method_id, 
@@ -273,12 +262,12 @@ class CheckoutController {
                 throw new Exception("Failed to create payment record: " . implode(", ", $stmt->errorInfo()));
             }
 
-            // Clear cart from database
+            // Clear cart from database using the original booking_id
             $this->clearCart($data['booking_id']);
 
             $this->pdo->commit();
 
-            // Clear session data
+            // Clear session booking_id to generate new one for next order
             unset($_SESSION['booking_id']);
             
             // Store booking ID for success page
@@ -321,7 +310,7 @@ class CheckoutController {
             // Debug: Log each item
             error_log("Processing cart item: " . print_r($item, true));
 
-            // Flexible field name handling - try different possible field names
+            // Flexible field name handling
             $menuItemId = $item['menu_item_id'] ?? $item['item_id'] ?? $item['id'] ?? null;
             $quantity = $item['quantity'] ?? 0;
             $price = $item['price'] ?? $item['unit_price'] ?? 0;
@@ -340,7 +329,7 @@ class CheckoutController {
                 throw new Exception("Invalid cart item: invalid subtotal");
             }
 
-            // CRITICAL: Validate that menu_item_id exists in menu_items table
+            // Validate that menu_item_id exists in menu_items table
             $validateStmt->execute([$menuItemId]);
             $menuItem = $validateStmt->fetch(PDO::FETCH_ASSOC);
             
@@ -348,7 +337,7 @@ class CheckoutController {
                 throw new Exception("Menu item with ID {$menuItemId} does not exist or is not available. Please refresh your cart.");
             }
 
-            // Recalculate subtotal based on current menu item price to prevent price manipulation
+            // Recalculate subtotal based on current menu item price
             $currentPrice = $menuItem['price'];
             $calculatedSubtotal = $currentPrice * $quantity;
             
@@ -361,7 +350,7 @@ class CheckoutController {
                 $booking_id,
                 $menuItemId,
                 (int)$quantity,
-                (float)$calculatedSubtotal // Use recalculated subtotal for security
+                (float)$calculatedSubtotal
             ]);
 
             if (!$success) {
@@ -372,14 +361,16 @@ class CheckoutController {
 
     private function clearCart($booking_id) {
         try {
-            // Clear cart items from database
-            $stmt = $this->pdo->prepare("DELETE FROM cart_items WHERE booking_id = ?");
+            // Clear cart items from booking_items table
+            $stmt = $this->pdo->prepare("DELETE FROM booking_items WHERE booking_id = ?");
             $stmt->execute([$booking_id]);
             
             // Also clear from session if stored there
             if (isset($_SESSION['cart'])) {
                 unset($_SESSION['cart']);
             }
+            
+            error_log("Cart cleared successfully for booking_id: " . $booking_id);
         } catch (Exception $e) {
             // Log but don't fail the transaction for cart clearing
             error_log("Warning: Failed to clear cart: " . $e->getMessage());

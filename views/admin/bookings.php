@@ -180,6 +180,16 @@ if (!is_array($statuses)) {
                                       <a class="dropdown-item" href="payments.php?booking_id=<?= $booking['id']; ?>">
                                         <i class="fas fa-credit-card"></i> View Payment
                                       </a>
+                                      <?php if (strtolower($booking['status']) === 'pending'): ?>
+                                        <a class="dropdown-item text-success" href="confirm_booking.php?id=<?= $booking['id']; ?>" 
+                                          onclick="return confirm('Are you sure you want to confirm this booking?');">
+                                          <i class="fas fa-check"></i> Confirm Booking
+                                        </a>
+                                        <a class="dropdown-item text-danger" href="reject_booking.php?id=<?= $booking['id']; ?>" 
+                                          onclick="return confirm('Are you sure you want to reject this booking?');">
+                                          <i class="fas fa-times"></i> Reject Booking
+                                        </a>
+                                      <?php endif; ?>
                                       <div class="dropdown-divider"></div>
                                       <!-- <a class="dropdown-item" href="update_status.php?id=<?= $booking['id']; ?>">
                                         <i class="fas fa-edit"></i> Update Status
